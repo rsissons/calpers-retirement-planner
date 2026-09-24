@@ -2,6 +2,7 @@ import type { FC } from 'react';
 import type { ProjectionResult } from '../projection';
 import type { Config } from '../config';
 import { calculatePension, ageOn, birthdayAt, firstOfMonthAfter, rmdStartAge } from '../calpers';
+import { BudgetByYear } from './BudgetByYear';
 import { AreaChart, Area, XAxis, YAxis, CartesianGrid, ResponsiveContainer, Tooltip, Legend } from 'recharts';
 
 interface Props { config: Config; projection: ProjectionResult; }
@@ -53,24 +54,10 @@ export const Overview: FC<Props> = ({ config, projection }) => {
   const depletionYear = projection.yearly.find(y => assetsAt(y) < 1000);
   const fundedThrough = depletionYear ? `Age ${depletionYear.age}` : `Age ${last.age}+`;
 
-  // Monthly budget
+  // First-month headline (the budget card below covers any year)
   const monthlyNet = m1.netIncome;
   const monthlySpend = m1.essentialSpending + m1.discretionarySpending + m1.debtPayments;
   const surplus = monthlyNet - monthlySpend;
-
-  // Where shortfalls come from: this month, all of year 1, and when savings stop covering them
-  const allMonths = projection.yearly.flatMap(y => y.months);
-  const monthLabel = (k: number) => {
-    const [yy, mm] = firstOfMonthAfter(config.yourRetirementDate, k + 1).split('-').map(Number);
-    return new Date(yy, mm - 1, 1).toLocaleDateString('en-US', { month: 'short', year: 'numeric' });
-  };
-  const first403bIndex = allMonths.findIndex(m => m.gap > 0 && m.withdrawal403b > 0);
-  const firstRothIndex = allMonths.findIndex(m => m.gap > 0 && m.withdrawalRoth > 0);
-  const coverSources = (cash: number, b403: number, roth: number) =>
-    [{ label: 'Savings', val: cash }, { label: '403(b)', val: b403 }, { label: 'Roth', val: roth }].filter(s => s.val > 0.5);
-  const monthSources = coverSources(m1.withdrawalCash, m1.withdrawal403b, m1.withdrawalRoth);
-  const yearSources = coverSources(y1.totalWithdrawalCash, y1.totalWithdrawal403b, y1.totalWithdrawalRoth);
-  const year1Shortfall = y1.months.reduce((sum, m) => sum + Math.max(0, m.gap), 0);
 
   // Monthly pension N years in, from the projection (CalPERS COLA timing)
   const pensionInYear = (n: number) => projection.yearly[Math.min(n, projection.yearly.length - 1)].months[0].pension;
@@ -204,66 +191,7 @@ export const Overview: FC<Props> = ({ config, projection }) => {
       {/* ── ROW 3: Monthly Budget + Asset Projection ── */}
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
 
-        {/* Monthly Budget */}
-        <div className="bg-white rounded-lg border border-gray-200 shadow-sm p-5">
-          <h3 className="text-base font-bold text-[#15325b] mb-1">💵 First-Month Budget</h3>
-          <p className="text-xs text-gray-400 mb-3">Age {y1.age} · {monthLabel(0)} · Income vs. Spending</p>
-          <div className="grid grid-cols-2 gap-3 mb-3">
-            <div className="rounded p-3 border-l-4" style={{ borderColor: C.green, background: '#f0fdf4' }}>
-              <p className="text-[10px] text-gray-500 uppercase">Net Monthly Income</p>
-              <p className="text-xl font-bold" style={{ color: C.green }}>{$(monthlyNet)}</p>
-            </div>
-            <div className="rounded p-3 border-l-4" style={{ borderColor: C.orange, background: '#fff7ed' }}>
-              <p className="text-[10px] text-gray-500 uppercase">Total Monthly Spend</p>
-              <p className="text-xl font-bold" style={{ color: C.orange }}>{$(monthlySpend)}</p>
-            </div>
-          </div>
-          <div className="space-y-1.5 text-sm">
-            {[
-              { label: 'CalPERS Pension', val: m1.pension, color: C.blue },
-              { label: `${partner}'s Pension`, val: m1.spousePension, color: C.blue },
-              { label: `${partner}'s Take-Home Pay`, val: m1.spouseSalary, color: C.sky },
-              { label: `${partner}'s Social Security`, val: m1.spouseSS, color: C.blue },
-              { label: `${you}'s Social Security`, val: m1.yourSS, color: C.blue },
-              { label: 'Essential', val: -m1.essentialSpending, color: C.orange },
-              { label: 'Discretionary', val: -m1.discretionarySpending, color: C.vermillion },
-              { label: 'Loans', val: -m1.debtPayments, color: C.orange },
-              { label: 'Healthcare / Insurance', val: -(m1.insurance + m1.medicare), color: C.purple },
-              { label: 'Est. Taxes', val: -m1.taxes, color: '#6b7280' },
-            ].filter(r => Math.abs(r.val) > 0.5).map(row => (
-              <div key={row.label} className="flex justify-between items-center gap-2">
-                <span className="text-gray-600">{row.label}</span>
-                <span className="font-semibold" style={{ color: row.color }}>{row.val > 0 ? '+' : ''}{$(row.val)}</span>
-              </div>
-            ))}
-            <div className="flex justify-between items-center border-t pt-2 mt-1 font-bold">
-              <span>Net Monthly {surplus >= 0 ? 'Surplus' : 'Shortfall'}</span>
-              <span style={{ color: surplus >= 0 ? C.green : C.vermillion }}>{surplus >= 0 ? '+' : ''}{$(surplus)}</span>
-            </div>
-          </div>
-
-          {/* How the shortfall is covered */}
-          <div className="mt-4 rounded bg-gray-50 border border-gray-100 p-3 text-sm space-y-1.5">
-            <p className="text-[10px] font-bold uppercase tracking-wider text-gray-500">How it's covered</p>
-            <div className="flex justify-between gap-2"><span className="text-gray-600">This month</span>
-              {monthSources.length > 0
-                ? <span className="font-semibold text-gray-800 text-right">{monthSources.map(s => `${s.label} ${$(s.val)}`).join(' + ')}</span>
-                : <span className="font-semibold" style={{ color: C.green }}>No shortfall</span>}
-            </div>
-            <div className="flex justify-between gap-2"><span className="text-gray-600">All of year 1</span>
-              <span className="font-semibold text-gray-800 text-right">{yearSources.length > 0 ? `${$(year1Shortfall)} short: ${yearSources.map(s => `${s.label} ${$(s.val)}`).join(' + ')}` : 'No shortfall'}</span></div>
-            <div className="flex justify-between gap-2"><span className="text-gray-600">Savings balance</span>
-              <span className="font-semibold text-gray-800 text-right">{$(config.startingCash)} → {$(y1.endBalanceCash)} by end of year 1</span></div>
-            {first403bIndex >= 0 ? (
-              <p className="text-xs" style={{ color: C.vermillion }}>
-                Savings run out in {monthLabel(first403bIndex)}; after that the 403(b) covers shortfalls
-                {firstRothIndex >= 0 ? `, then the Roth from ${monthLabel(firstRothIndex)}` : ''}. Money from the 403(b) is taxed on the way out.
-              </p>
-            ) : (
-              <p className="text-xs" style={{ color: C.green }}>Savings cover every shortfall; the 403(b) isn't needed for spending.</p>
-            )}
-          </div>
-        </div>
+        <BudgetByYear config={config} projection={projection} />
 
         {/* Asset Projection */}
         <div className="bg-white rounded-lg border border-gray-200 shadow-sm p-5">

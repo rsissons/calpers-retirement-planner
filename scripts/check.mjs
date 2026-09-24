@@ -58,6 +58,9 @@ ok(JSON.stringify(toConfig({ format: 'calpers-retirement-planner', version: 1, p
 const partial = toConfig({ yourBirthDate: '1970-01-01', yourRetirementDate: '2031-01-01', current403b: 'oops', debts: [{ name: 'X', payment: '100', endDate: '2033-01-01' }], pensionFormulaId: 'nope' });
 ok(partial && partial.current403b === S.current403b && partial.debts[0].payment === 100 && partial.pensionFormulaId === S.pensionFormulaId, 'partial file falls back safely');
 ok(toConfig({ hello: 1 }) === null && toConfig('x') === null, 'junk rejected');
+// Budget card: each year's rows (income − income tax − health − spending − loans) add up to the surplus
+const rowsSum = y => y.totalIncome - y.totalIncomeTaxes - y.totalInsurance - y.totalMedicare - y.totalEssentialSpending - y.totalDiscretionarySpending - y.totalDebtPayments;
+ok([base, single, sp].every(r => r.yearly.every(y => Math.abs(rowsSum(y) + y.totalGap) < 0.01)), "budget rows add up to each year's surplus");
 // Edge: retire past end age, no crash
 ok(run({ projectionEndAge: 60 }).yearly.length === 1, 'end age before retirement gives one year');
 console.log(fails ? `${fails} FAILURES` : 'ALL PASS');
