@@ -38,7 +38,8 @@ export const BudgetByYear: FC<Props> = ({ config, projection }) => {
   const rows = [
     { label: 'CalPERS Pension', val: mo(y.totalPension), color: C.blue },
     { label: `${partner}'s Pension`, val: mo(y.totalSpousePension), color: C.blue },
-    { label: `${partner}'s Take-Home Pay`, val: mo(y.totalSpouseSalary), color: C.sky },
+    { label: `${partner}'s ${config.spousePayIsGross ? 'Pay (gross)' : 'Take-Home Pay'}`, val: mo(y.totalSpouseSalary), color: C.sky },
+    { label: `${you}'s Job (gross)`, val: mo(y.totalJobPay), color: C.sky },
     { label: `${partner}'s Social Security`, val: mo(y.totalSpouseSS), color: C.blue },
     { label: `${you}'s Social Security`, val: mo(y.totalYourSS), color: C.blue },
     { label: 'Essential', val: -mo(y.totalEssentialSpending), color: C.orange },
@@ -46,6 +47,7 @@ export const BudgetByYear: FC<Props> = ({ config, projection }) => {
     { label: 'Loans', val: -mo(y.totalDebtPayments), color: C.orange },
     { label: 'Healthcare / Insurance', val: -mo(y.totalInsurance + y.totalMedicare), color: C.purple },
     { label: 'Income Tax', val: -mo(y.totalIncomeTaxes), color: '#6b7280' },
+    { label: 'Payroll Tax (FICA, SDI)', val: -mo(y.totalPayrollTaxes), color: '#6b7280' },
   ].filter(r => Math.abs(r.val) > 0.5);
 
   // How the year's shortfalls were covered, and what savings did

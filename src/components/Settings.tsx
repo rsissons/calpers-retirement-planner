@@ -70,16 +70,28 @@ export const Settings: FC<Props> = ({ config, setConfig }) => {
             <TextField label="Their first name" name="spouseName" value={config.spouseName} onChange={onChange} />
             <DateField label="Their birth date" name="spouseBirthDate" value={config.spouseBirthDate} onChange={onChange}
               hint={`${partner} will be ${Math.floor(spouseAgeAtYourRetirement)} when ${you} retires.`} />
-            <NumberField label="Their take-home pay (monthly, while working)" name="spouseSalary" value={config.spouseSalary} step={10} prefix="$" onChange={onChange}
-              hint="Net pay from their paystub. It's already taxed, so it isn't taxed again. 0 if not working." />
+            <NumberField label={config.spousePayIsGross ? 'Their gross pay (monthly, while working)' : 'Their take-home pay (monthly, while working)'} name="spouseSalary" value={config.spouseSalary} step={10} prefix="$" onChange={onChange}
+              hint={config.spousePayIsGross
+                ? 'Gross pay from their paystub, before any taxes. Taxed with the pensions, plus FICA and CA SDI. 0 if not working.'
+                : 'Net pay, not taxed again. This plan was saved before 1.2.0; tick the box below and enter gross pay for the full tax math.'} />
+            <Toggle label="That's gross pay (before tax)" name="spousePayIsGross" checked={config.spousePayIsGross} onChange={onChange}
+              hint="Leave this on. Off only keeps older plans that entered take-home pay." />
             <DateField label="Their retirement date" name="spouseRetirementDate" value={config.spouseRetirementDate} onChange={onChange}
-              hint="Take-home pay stops; their own pension (below) starts." />
+              hint="Their pay stops; their own pension (below) starts." />
             <NumberField label="Their own pension (monthly, from their retirement)" name="spousePension" value={config.spousePension} step={10} prefix="$" onChange={onChange}
               hint="CalPERS, CalSTRS or any other pension. Taxable. 0 if none." />
             <NumberField label="Their Social Security (monthly, at their start age)" name="spouseSS" value={config.spouseSS} step={10} prefix="$" onChange={onChange} />
             <SliderField label="Their Social Security starts at" name="spouseSSStartAge" value={config.spouseSSStartAge} min={62} max={70} step={1}
               display={`Age ${config.spouseSSStartAge}`} onChange={onChange} />
           </>}
+        </Card>
+
+        <Card title="Work After Retirement">
+          <NumberField label={`${you}'s job pay (gross, monthly)`} name="jobPay" value={config.jobPay} step={100} prefix="$" onChange={onChange}
+            hint="Pay from a job after you retire, before tax. Starts the month after your retirement date. Taxed with your pension, plus FICA and CA SDI. 0 if none." />
+          <SliderField label="Work until age" name="jobEndAge" value={config.jobEndAge} min={50} max={80} step={1}
+            display={`${config.jobEndAge}`} onChange={onChange}
+            hint="If you draw Social Security before full retirement age, $1 is held back for every $2 of wages over $24,480/yr (2026). Working for a CalPERS employer as a retired annuitant: 180-day wait and 960 hours per fiscal year max. Private-sector work doesn't affect your pension." />
         </Card>
 
         <Card title="CalPERS Pension" wide>

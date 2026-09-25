@@ -100,3 +100,57 @@ export function incomeTax({ ordinaryIncome, socialSecurity, seniors, taxYear, in
 
   return { federal, california, total: federal + california };
 }
+
+// Payroll taxes on wages (employee share). Sources: SSA 2026 fact sheet; IRS Topic 560; EDD 2026 SDI rate.
+// The wage base and earnings-test limits are indexed forward from 2026 at the inflation rate.
+const PAYROLL_BASE_YEAR = 2026;
+const SS_TAX_RATE = 0.062;
+const SS_WAGE_BASE = 184_500;             // Per worker
+const MEDICARE_RATE = 0.0145;
+const ADDL_MEDICARE_RATE = 0.009;         // On wages over $250K joint / $200K single, not indexed
+const ADDL_MEDICARE_THRESHOLD: Record<FilingStatus, number> = { joint: 250_000, single: 200_000 };
+const CA_SDI_RATE = 0.013;                // No wage cap since 2024
+
+export const payrollScale = (year: number, indexing: number) =>
+  Math.pow(1 + indexing, Math.max(0, year - PAYROLL_BASE_YEAR));
+
+// Payroll tax on one month of wages, given what each worker and the household already earned this year
+export function payrollTaxMonth(
+  wages: number[], earnedBefore: number[], householdEarnedBefore: number, scale: number, filing: FilingStatus,
+) {
+  const base = SS_WAGE_BASE * scale;
+  let tax = 0;
+  wages.forEach((w, i) => {
+    tax += SS_TAX_RATE * Math.max(0, Math.min(w, base - earnedBefore[i]));
+    tax += (MEDICARE_RATE + CA_SDI_RATE) * w;
+  });
+  const threshold = ADDL_MEDICARE_THRESHOLD[filing];
+  const total = wages.reduce((a, b) => a + b, 0);
+  const over = Math.max(0, householdEarnedBefore + total - threshold) - Math.max(0, householdEarnedBefore - threshold);
+  return tax + ADDL_MEDICARE_RATE * over;
+}
+
+// Social Security full retirement age in years, by birth year (SSA)
+export function fullRetirementAge(birthDate: string) {
+  const y = Number(birthDate.slice(0, 4));
+  if (y <= 1954) return 66;
+  if (y >= 1960) return 67;
+  return 66 + (y - 1954) * 2 / 12;
+}
+
+// Social Security earnings test (SSA 2026): before full retirement age, $1 of benefits is held back
+// for every $2 of wages over the limit; in the year FRA is reached, $1 per $3 over the higher limit,
+// counting only wages before the FRA month. Benefits held back are credited back from FRA (not modeled).
+// Grace year: the first year with a month of benefits and no work (wages under 1/12 of the limit),
+// usually the year work stops, only the months worked can be held back.
+const EARNINGS_TEST_LIMIT = 24_480;
+const EARNINGS_TEST_FRA_YEAR_LIMIT = 65_160;
+export function earningsTestHoldback(wagesBeforeFRA: number, reachesFRAThisYear: boolean, scale: number) {
+  return reachesFRAThisYear
+    ? Math.max(0, wagesBeforeFRA - EARNINGS_TEST_FRA_YEAR_LIMIT * scale) / 3
+    : Math.max(0, wagesBeforeFRA - EARNINGS_TEST_LIMIT * scale) / 2;
+}
+
+// Wages above this in a month make it a "service month" for the grace-year rule
+export const earningsTestMonthlyLimit = (reachesFRAThisYear: boolean, scale: number) =>
+  (reachesFRAThisYear ? EARNINGS_TEST_FRA_YEAR_LIMIT : EARNINGS_TEST_LIMIT) * scale / 12;

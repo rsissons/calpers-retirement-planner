@@ -58,9 +58,46 @@ ok(JSON.stringify(toConfig({ format: 'calpers-retirement-planner', version: 1, p
 const partial = toConfig({ yourBirthDate: '1970-01-01', yourRetirementDate: '2031-01-01', current403b: 'oops', debts: [{ name: 'X', payment: '100', endDate: '2033-01-01' }], pensionFormulaId: 'nope' });
 ok(partial && partial.current403b === S.current403b && partial.debts[0].payment === 100 && partial.pensionFormulaId === S.pensionFormulaId, 'partial file falls back safely');
 ok(toConfig({ hello: 1 }) === null && toConfig('x') === null, 'junk rejected');
-// Budget card: each year's rows (income − income tax − health − spending − loans) add up to the surplus
-const rowsSum = y => y.totalIncome - y.totalIncomeTaxes - y.totalInsurance - y.totalMedicare - y.totalEssentialSpending - y.totalDiscretionarySpending - y.totalDebtPayments;
-ok([base, single, sp].every(r => r.yearly.every(y => Math.abs(rowsSum(y) + y.totalGap) < 0.01)), "budget rows add up to each year's surplus");
+// Work after retirement: payroll tax, the SS wage base, extra Medicare, and the earnings test
+const { fullRetirementAge } = await v.ssrLoadModule('/src/tax.ts');
+ok(fullRetirementAge('1960-05-01') === 67 && fullRetirementAge('1954-05-01') === 66 && Math.abs(fullRetirementAge('1957-05-01') - 66.5) < 1e-9, 'full retirement ages');
+const job = run({ hasSpouse: false, jobPay: 3000, jobEndAge: 64 });
+ok(Math.abs(job.yearly[0].months[0].payrollTaxes - 268.5) < 0.005, `$3,000 job: payroll ${job.yearly[0].months[0].payrollTaxes} = 3000 × 8.95%`);
+ok(job.yearly.find(y => y.age === 64).totalJobPay === 0 && job.yearly.find(y => y.age === 63).totalJobPay > 0, 'job stops at jobEndAge');
+ok(job.yearly.reduce((a, y) => a + y.totalIncomeTaxes, 0) > single.yearly.reduce((a, y) => a + y.totalIncomeTaxes, 0), 'job pay raises income tax');
+// Big job, single: wage base $184,500 × 1.02^(tax year − 2026), 0.9% over $200K
+const big = run({ hasSpouse: false, jobPay: 20000, jobEndAge: 70 });
+const bigY = big.yearly[1];
+const tyBig = 2032; // Plan year 2 runs Jul 2031–Jun 2032; its tax year is the calendar year of its 8th month
+const baseBig = 184500 * 1.02 ** (tyBig - 2026);
+const expBig = 0.062 * baseBig + 0.0275 * 240000 + 0.009 * 40000;
+ok(Math.abs(bigY.totalPayrollTaxes - expBig) < 0.01, `$20K job: year payroll ${bigY.totalPayrollTaxes.toFixed(2)} = ${expBig.toFixed(2)}`);
+// Earnings test: SS at 62 while working $3,000/mo before FRA 67 → (36,000 − limit) / 2 held back
+const et = run({ hasSpouse: false, jobPay: 3000, jobEndAge: 70, yourSSStartAge: 62 });
+const etY = et.yearly[1];
+const expHeld = (36000 - 24480 * 1.02 ** (tyBig - 2026)) / 2;
+ok(Math.abs(etY.totalSSHeldBack - expHeld) < 0.01, `earnings test holds back ${etY.totalSSHeldBack.toFixed(2)} = ${expHeld.toFixed(2)}`);
+ok(Math.abs(etY.totalYourSS + etY.totalSSHeldBack - et.yearly[1].months[0].yourSS * 12 - et.yearly[1].months[0].yourSSHeld * 12) < 0.01, 'held back + paid = full benefit');
+ok(et.yearly.filter(y => y.age >= 67).every(y => y.totalSSHeldBack === 0), 'no earnings test from full retirement age');
+ok(run({ hasSpouse: false, jobPay: 2000, jobEndAge: 70, yourSSStartAge: 62 }).yearly[1].totalSSHeldBack === 0, 'no holdback under the limit');
+// Grace year: spouse draws SS from 62 while working, retires at 63. In the year they stop, months not
+// worked get the full check; the year before, the whole-year rule applies to every SS month.
+const gy = run({ spouseSSStartAge: 62 });
+const gyMonths = gy.yearly.flatMap(y => y.months);
+const retiredIdx = gyMonths.findIndex(m => m.spouseSalary === 0);
+const gyYear = gy.yearly[gyMonths[retiredIdx].yearIndex];
+ok(gyYear.months.every(m => m.spouseSalary > 0 || m.spouseSSHeld === 0), 'grace year: no holdback once they stop working');
+ok(gyMonths.slice(0, retiredIdx).some(m => m.spouseSSHeld > 0), 'while working before FRA: SS held back');
+ok(gy.yearly.slice(gyYear.yearIndex + 1).every(y => y.totalSSHeldBack === 0), 'after the grace year: nothing held');
+// Older plans: spouse pay was take-home; it loads as take-home and isn't taxed
+const old = toConfig({ ...S, spousePayIsGross: undefined });
+ok(old.spousePayIsGross === false, 'pre-1.2 plan loads as take-home');
+const oldRun = P(prepareConfig(old));
+ok(oldRun.yearly.every(y => y.totalPayrollTaxes === 0), 'take-home spouse pay: no payroll tax');
+ok(base.yearly[0].totalPayrollTaxes > 0 && oldRun.yearly[0].totalIncomeTaxes < base.yearly[0].totalIncomeTaxes, 'gross spouse pay: payroll and income tax');
+// Budget card: each year's rows (income − income tax − payroll tax − health − spending − loans) add up to the surplus
+const rowsSum = y => y.totalIncome - y.totalIncomeTaxes - y.totalPayrollTaxes - y.totalInsurance - y.totalMedicare - y.totalEssentialSpending - y.totalDiscretionarySpending - y.totalDebtPayments;
+ok([base, single, sp, job, big, et, oldRun].every(r => r.yearly.every(y => Math.abs(rowsSum(y) + y.totalGap) < 0.01)), "budget rows add up to each year's surplus");
 // Edge: retire past end age, no crash
 ok(run({ projectionEndAge: 60 }).yearly.length === 1, 'end age before retirement gives one year');
 console.log(fails ? `${fails} FAILURES` : 'ALL PASS');

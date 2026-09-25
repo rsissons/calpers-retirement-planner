@@ -17,7 +17,7 @@ export function prepareConfig(config: Config): Config {
 
 const STORAGE_KEY = 'calpers-retirement-planner:v1';
 export const FILE_FORMAT = 'calpers-retirement-planner';
-export const FILE_VERSION = 1;
+export const FILE_VERSION = 2;
 
 // Accepts a saved or imported object and returns a complete, valid Config, or null if it isn't one.
 // Missing fields fall back to the sample, so files from older versions keep loading.
@@ -40,6 +40,8 @@ export function toConfig(raw: unknown): Config | null {
     }
   }
   const config = merged as unknown as Config;
+  // Before 1.2.0 the spouse's pay was take-home (untaxed). Keep those plans' numbers as they were.
+  if (typeof data.spousePayIsGross !== 'boolean') config.spousePayIsGross = false;
   if (!FORMULAS.some(f => f.id === config.pensionFormulaId)) config.pensionFormulaId = sampleConfig.pensionFormulaId;
   return config;
 }

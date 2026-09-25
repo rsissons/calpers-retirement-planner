@@ -21,7 +21,9 @@ Exactly how the planner calculates, so anyone can check it. The code references 
 ## Other income (`projection.ts`)
 
 - **Social Security** (each person) starts in the month that person reaches their chosen start age. Enter the amount for that age from the SSA statement. It grows each plan year at the pension COLA rate.
-- **Spouse's take-home pay** continues every month that starts before their retirement date. It's net pay, so it isn't taxed again.
+- **Spouse's pay** is gross pay. It continues every month that starts before their retirement date. It's taxed as ordinary income and pays payroll tax (below). Plans saved before 1.2.0 entered take-home pay; they load with "That's gross pay" off, and that pay is left untaxed as before.
+- **Your job after retiring** is gross pay from the month after your retirement date until you reach the "work until" age. It's taxed the same way as the spouse's pay.
+- **Social Security earnings test:** each person's wages in a plan year before their full retirement age (66 to 67 by birth year) are compared with $24,480 (2026). $1 of that person's Social Security is held back for every $2 over it. In the plan year they reach full retirement age, the rule is $1 for every $3 over $65,160, counting only wages before that month. The limits are indexed at spending inflation. The holdback is spread evenly over the months they draw benefits before full retirement age. SSA later raises the benefit to give it back; that credit isn't modeled.
 - **Spouse's pension** starts after their retirement date and grows each plan year at the pension COLA rate. It's taxable.
 
 ## Savings and withdrawals (`savings.ts`, `projection.ts`)
@@ -29,7 +31,7 @@ Exactly how the planner calculates, so anyone can check it. The code references 
 - Before retirement, today's 403(b)/457(b) and cash savings grow monthly at their rates, with your monthly contributions added, up to the retirement date. The Roth balance is entered as of retirement.
 - In retirement, the 403(b) and Roth compound monthly at the investment return, and savings at the savings rate.
 - **Roth conversions** move up to your monthly amount from the 403(b) to the Roth each month until the 403(b) is empty. The tax they add is paid from the 403(b), not from spending.
-- **Shortfalls** (spending + loans + health + income tax above income) come from cash savings first, then the 403(b), then the Roth.
+- **Shortfalls** (spending + loans + health + income and payroll tax above income) come from cash savings first, then the 403(b), then the Roth.
 - **Surpluses** are added to savings when "bank leftover income" is on; otherwise they're treated as spent.
 - **Required minimum distributions** begin in the year you reach age 75 if born 1960 or later, or 73 if born 1951 to 1959 (SECURE 2.0). Each year's RMD is the 403(b) balance at the start of the year divided by the IRS Uniform Lifetime Table factor for your age at year end. Conversions and withdrawals count toward it; any remainder is withdrawn in the last month, taxed, and put into savings.
 
@@ -47,12 +49,13 @@ Exactly how the planner calculates, so anyone can check it. The code references 
 ## Income tax (`tax.ts`)
 
 - Filing status: married filing jointly with a spouse, single without.
-- **Taxable (ordinary) income:** pensions, 403(b) withdrawals, Roth conversions and RMDs. Take-home pay isn't included, since it was already taxed.
+- **Taxable (ordinary) income:** pensions, gross wages, 403(b) withdrawals, Roth conversions and RMDs. Take-home pay from older plans isn't included, since it was already taxed.
+- **Payroll tax on wages:** Social Security 6.2% up to each worker's wage base ($184,500 in 2026, indexed), Medicare 1.45%, plus 0.9% additional Medicare on the household's wages over $250,000 (joint) or $200,000 (single), and California SDI 1.3% with no wage cap. Each plan year's wages are counted from its first month.
 - **Federal:** 2026 brackets, standard deduction, and the additional deduction for each person 65+. Up to 85% of Social Security is taxable, using the provisional-income base amounts, which are fixed in law.
 - **California:** 2025 brackets and standard deduction, and personal and senior exemption credits. Social Security isn't taxed.
 - Brackets, deductions and credits are indexed forward each year at the spending inflation rate.
 - Each year's tax is solved iteratively, because 403(b) withdrawals are taxable and some of them pay the tax. It's then spread evenly across the year's months.
-- **Not modeled:** the temporary 2025 to 2028 federal senior deduction, itemized deductions, capital gains, the tax on savings interest, the California exemption credit phase-out at high incomes, and the Social Security earnings test.
+- **Not modeled:** the temporary 2025 to 2028 federal senior deduction, itemized deductions, capital gains, the tax on savings interest, the California exemption credit phase-out at high incomes, and the earnings-test credit SSA gives back after full retirement age.
 
 ## Other simplifications
 
@@ -71,6 +74,9 @@ Exactly how the planner calculates, so anyone can check it. The code references 
 | California standard deduction and exemption credits (2025) | FTB 2025 Form 540 booklet |
 | Uniform Lifetime Table | IRS Publication 590-B, Appendix B, Table III |
 | RMD starting ages | SECURE 2.0 Act |
+| Social Security wage base ($184,500), earnings test limits ($24,480 / $65,160), full retirement ages (2026) | SSA 2026 COLA fact sheet; ssa.gov |
+| Medicare tax and the 0.9% additional Medicare tax | IRS Topic 560 |
+| California SDI rate (1.3%, no wage cap, 2026) | EDD contribution rates |
 | Sample Part B premium (2026, $202.90) | CMS |
 | Sample health premiums (2027 Kaiser, Region 3) | CalPERS 2027 health plan rates |
 

@@ -32,6 +32,7 @@ export const DataTable: FC<Props> = ({ config, projection }) => {
   const partner = config.spouseName || 'Spouse';
   const you = config.yourName || 'You';
   const showSpousePension = spouse && config.spousePension > 0;
+  const showJob = config.jobPay > 0;
 
   const yearlyRows = projection.yearly;
   const monthlyRows = projection.yearly.flatMap(y => y.months);
@@ -113,12 +114,13 @@ export const DataTable: FC<Props> = ({ config, projection }) => {
                 <th className="px-3 py-3 whitespace-nowrap">Age {viewMode === 'monthly' && '(Mo)'}</th>
                 <th className="px-3 py-3">Pension</th>
                 {showSpousePension && <th className="px-3 py-3">{partner}<br/>Pension</th>}
-                {spouse && <th className="px-3 py-3">{partner}<br/>Net Pay</th>}
+                {spouse && <th className="px-3 py-3">{partner}<br/>{config.spousePayIsGross ? 'Pay' : 'Net Pay'}</th>}
+                {showJob && <th className="px-3 py-3">{you}<br/>Job</th>}
                 {spouse && <th className="px-3 py-3">{partner}<br/>SS</th>}
                 <th className="px-3 py-3">{you}<br/>SS</th>
                 <th className="px-3 py-3">Healthcare<br/><span className="text-[10px] font-normal text-gray-400">(deducted)</span></th>
-                <th className={`px-3 py-3 ${COL_TAXES}`} title="Tax on pensions, 403b withdrawals & Social Security (take-home pay is already taxed)">Income<br/>Tax<br/><span className="text-[10px] font-normal">(deducted)</span></th>
-                <th className={`px-3 py-3 font-bold text-[#009E73]`} title="Gross income minus healthcare and income tax: what you actually have to spend">Net Income<br/><span className="text-[10px] font-normal text-green-600">after tax & healthcare</span></th>
+                <th className={`px-3 py-3 ${COL_TAXES}`} title="Income tax on pensions, wages, 403b withdrawals & Social Security, plus payroll tax (FICA, CA SDI) on wages">Income &amp;<br/>Payroll Tax<br/><span className="text-[10px] font-normal">(deducted)</span></th>
+                <th className={`px-3 py-3 font-bold text-[#009E73]`} title="Gross income minus healthcare, income tax and payroll tax: what you actually have to spend">Net Income<br/><span className="text-[10px] font-normal text-green-600">after tax & healthcare</span></th>
                 <th className="px-3 py-3">Essential</th>
                 <th className="px-3 py-3">Discret.</th>
                 <th className="px-3 py-3" title="Fixed loan payments. Each stops at its payoff date.">Loans</th>
@@ -148,10 +150,11 @@ export const DataTable: FC<Props> = ({ config, projection }) => {
                     <td className="px-3 py-2.5">{formatCurrency(y.totalPension)}</td>
                     {showSpousePension && <td className="px-3 py-2.5">{formatCurrency(y.totalSpousePension)}</td>}
                     {spouse && <td className="px-3 py-2.5">{formatCurrency(y.totalSpouseSalary)}</td>}
+                    {showJob && <td className="px-3 py-2.5">{y.totalJobPay > 0 ? formatCurrency(y.totalJobPay) : '—'}</td>}
                     {spouse && <td className="px-3 py-2.5">{formatCurrency(y.totalSpouseSS)}</td>}
                     <td className="px-3 py-2.5">{formatCurrency(y.totalYourSS)}</td>
                     <td className="px-3 py-2.5 text-red-400">{y.totalInsurance + y.totalMedicare > 0 ? `−${formatCurrency(y.totalInsurance + y.totalMedicare)}` : '—'}</td>
-                    <td className={`px-3 py-2.5 ${COL_TAXES}`}>−{formatCurrency(y.totalIncomeTaxes)}</td>
+                    <td className={`px-3 py-2.5 ${COL_TAXES}`}>−{formatCurrency(y.totalIncomeTaxes + y.totalPayrollTaxes)}</td>
                     <td className={`px-3 py-2.5 font-bold ${COL_NET}`}>{formatCurrency(y.totalNetIncome)}</td>
                     <td className="px-3 py-2.5">{formatCurrency(y.totalEssentialSpending)}</td>
                     <td className="px-3 py-2.5">{formatCurrency(y.totalDiscretionarySpending)}</td>
@@ -200,10 +203,11 @@ export const DataTable: FC<Props> = ({ config, projection }) => {
                     <td className="px-3 py-2">{formatCurrency(m.pension)}</td>
                     {showSpousePension && <td className="px-3 py-2">{formatCurrency(m.spousePension)}</td>}
                     {spouse && <td className="px-3 py-2">{formatCurrency(m.spouseSalary)}</td>}
+                    {showJob && <td className="px-3 py-2">{m.jobPay > 0 ? formatCurrency(m.jobPay) : '—'}</td>}
                     {spouse && <td className="px-3 py-2">{formatCurrency(m.spouseSS)}</td>}
                     <td className="px-3 py-2">{formatCurrency(m.yourSS)}</td>
                     <td className="px-3 py-2 text-red-400">{m.insurance + m.medicare > 0 ? `−${formatCurrency(m.insurance + m.medicare)}` : '—'}</td>
-                    <td className={`px-3 py-2 ${COL_TAXES}`}>−{formatCurrency(m.incomeTaxes)}</td>
+                    <td className={`px-3 py-2 ${COL_TAXES}`}>−{formatCurrency(m.incomeTaxes + m.payrollTaxes)}</td>
                     <td className={`px-3 py-2 font-bold ${COL_NET}`}>{formatCurrency(m.netIncome)}</td>
                     <td className="px-3 py-2">{formatCurrency(m.essentialSpending)}</td>
                     <td className="px-3 py-2">{formatCurrency(m.discretionarySpending)}</td>

@@ -53,6 +53,7 @@ export const Guide: FC = () => (
         <li>Pension from the CalPERS benefit factor chart for your formula × service × final compensation × option factor, capped where the chart says so. The first CalPERS COLA is May 1 of the second calendar year after retiring.</li>
         <li>Shortfalls come from cash savings first, then the 403(b), then the Roth. Roth conversions (if any) run from the 403(b) until it's empty.</li>
         <li>Federal and California income tax from real brackets (2026 federal, 2025 California), joint or single, indexed at spending inflation. Up to 85% of Social Security is federally taxable; California doesn't tax it.</li>
+        <li>Wages (your spouse's pay and any job you take after retiring) are entered gross. They're taxed with the pensions and also pay FICA and California SDI. Before full retirement age, Social Security is reduced by the earnings test.</li>
         <li>Required minimum distributions start at 75 (born 1960 or later) or 73 (born 1951–1959), using the IRS Uniform Lifetime Table.</li>
         <li>Health premiums grow at healthcare inflation; the employer's contribution stays fixed. Part B is added for each person 65+.</li>
         <li>Returns are a steady rate every year: no market crashes, no sequence-of-returns risk.</li>
@@ -63,7 +64,7 @@ export const Guide: FC = () => (
       <ul className="list-disc pl-5 space-y-1">
         <li>No survivor scenario: both people are assumed alive for the whole plan.</li>
         <li>No IRMAA (higher Medicare premiums at high incomes), long-term care, or one-time big expenses.</li>
-        <li>No Social Security earnings test for work before full retirement age, and no taxes on savings interest.</li>
+        <li>No taxes on savings interest, and Social Security held back by the earnings test isn't credited back after full retirement age (a little conservative).</li>
         <li>Only CalPERS formulas and California taxes. It isn't built for CalSTRS members or other states.</li>
       </ul>
       <p className="pt-2 font-semibold text-gray-800">This is a planning tool, not financial, tax or legal advice. Confirm your pension with CalPERS before you make decisions, and consider a fee-only fiduciary planner.</p>

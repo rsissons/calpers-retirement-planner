@@ -15,6 +15,7 @@ It runs entirely in your web browser. There's no account, no server and no track
 | Your CalPERS retirement formula, service credit and final compensation | Your CalPERS Annual Member Statement, or [myCalPERS](https://my.calpers.ca.gov) |
 | A myCalPERS retirement estimate (to check the pension and get your beneficiary option factor) | myCalPERS, "Retirement Estimate Calculator" |
 | Your Social Security estimate | [ssa.gov/myaccount](https://www.ssa.gov/myaccount/) |
+| Gross pay for a spouse who's still working, or for a job you'd take after retiring | Paystubs or a job offer |
 | 403(b), 457(b), Roth IRA and savings balances | Your latest statements |
 | Retiree health premiums and your employer's retiree contribution | CalPERS health plan rates for your region, plus HR or your bargaining unit's MOU |
 | Monthly spending, split into essential and discretionary, and your loan payments | A year of bank and card statements, or a budgeting app |
@@ -34,7 +35,7 @@ It isn't built for CalSTRS members, other states' taxes, or other pension system
 
 **Or download it** to use offline:
 
-1. Download `CalPERS-Retirement-Planner-1.1.0.html` from the [latest release](https://github.com/rsissons/calpers-retirement-planner/releases/latest) and save it anywhere, like your Documents folder.
+1. Download `CalPERS-Retirement-Planner-1.2.0.html` from the [latest release](https://github.com/rsissons/calpers-retirement-planner/releases/latest) and save it anywhere, like your Documents folder.
 2. Double-click it. It opens in your browser.
 3. It opens on the **Guide** with a made-up sample household loaded. Click **Enter my numbers** and replace the sample figures with yours.
 4. Your numbers save automatically in that browser. Use **Save to file** in the menu (☰) to keep a backup you can move to another computer or browser.

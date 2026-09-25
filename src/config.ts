@@ -46,14 +46,18 @@ export interface Config {
 
   // Spouse (ignored when hasSpouse is off)
   spouseBirthDate: string;
-  spouseSalary: number;          // Monthly take-home pay while working (already after tax)
-  spouseRetirementDate: string;  // Take-home pay stops; their pension starts
+  spouseSalary: number;          // Monthly pay while working: gross (taxed) or, in older plans, take-home
+  spousePayIsGross: boolean;     // Plans saved before 1.2.0 entered take-home pay; those load with this off
+  spouseRetirementDate: string;  // Their pay stops; their pension starts
   spousePension: number;         // Monthly pension of their own, from their retirement date (taxable)
   spouseSS: number;              // Monthly Social Security at spouseSSStartAge
   spouseSSStartAge: number;
 
   yourSS: number;
   yourSSStartAge: number;
+
+  jobPay: number;                 // Your monthly GROSS pay from a job after retiring (0 = none)
+  jobEndAge: number;              // Works from the month after retirement until this age
 
   essentialSpending: number;
   discretionarySpending: number;
@@ -126,7 +130,8 @@ export const sampleConfig: Config = {
   beneficiaryOptionFactor: 0.93,
 
   spouseBirthDate: '1969-03-10',
-  spouseSalary: 4200,
+  spouseSalary: 5800,
+  spousePayIsGross: true,
   spouseRetirementDate: '2032-03-10',
   spousePension: 0,
   spouseSS: 1600,
@@ -134,6 +139,9 @@ export const sampleConfig: Config = {
 
   yourSS: 1200,
   yourSSStartAge: 67,
+
+  jobPay: 0,
+  jobEndAge: 65,
 
   essentialSpending: 5200,
   discretionarySpending: 1800,

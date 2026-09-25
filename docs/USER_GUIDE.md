@@ -20,7 +20,7 @@ All money is **monthly** unless the label says otherwise. Every change applies i
 | Your employer's contribution toward retiree health | HR, benefits office, or your bargaining unit's MOU | Healthcare costs |
 | Monthly spending, and each loan's payment and payoff date | Bank and card statements, loan statements | Expenses |
 
-If your spouse or partner is included, you'll also want their take-home pay (from a paystub), any pension of their own, and their Social Security estimate.
+If your spouse or partner is included, you'll also want their gross pay (from a paystub), any pension of their own, and their Social Security estimate.
 
 ---
 
@@ -39,10 +39,20 @@ Open the menu (☰, top left) and choose **Your Numbers**.
 
 Switch **Plan for two people** off if you're single; taxes then use single-filer brackets. When it's on:
 
-- **Take-home pay:** their *net* pay from a paystub, monthly. It's already been taxed through withholding, so the planner doesn't tax it again. Enter 0 if they don't work.
+- **Gross pay:** their pay *before* taxes, monthly, from a paystub (biweekly gross × 26 ÷ 12). The planner taxes it with the pensions through the brackets, and takes out FICA (Social Security and Medicare) and California SDI. Enter 0 if they don't work.
+- **"That's gross pay" box:** leave it on. Plans saved before version 1.2.0 entered take-home pay instead, and they open with the box off so their numbers don't change. To switch one over, tick the box and type in gross pay.
 - **Their retirement date:** their pay stops and their own pension (if any) starts.
 - **Their own pension:** any pension (CalPERS, CalSTRS, private) as a flat monthly amount. It's taxed, and it grows at the COLA rate you set for yours.
 - **Their Social Security and start age:** from their SSA statement.
+
+### Work After Retirement
+
+For a job you'd take after retiring, full-time or part-time. Leave the pay at 0 if you won't work.
+
+- **Job pay:** gross monthly pay, before tax. It starts the month after your retirement date. It's taxed on top of your pension, plus FICA and California SDI, so with a pension already in place a good share of each extra dollar goes to tax.
+- **Work until age:** the pay stops in the month you reach this age.
+- **Social Security earnings test:** if you draw Social Security before full retirement age (67 for anyone born 1960 or later), $1 is held back for every $2 you earn over $24,480 a year (2026). In the year you reach full retirement age it's $1 for every $3 over $65,160. The planner takes that out of your checks. SSA pays it back later by raising your benefit, but the planner doesn't count that, so it's slightly cautious.
+- **Going back to a CalPERS employer:** as a retired annuitant you must wait 180 days after retiring, and you can work at most 960 hours per fiscal year (July to June) across all CalPERS employers. A private-sector job doesn't affect your pension.
 
 ### CalPERS Pension
 

@@ -1,6 +1,6 @@
 import type { Config } from './config';
 import { ageOn, firstOfMonthAfter, rmdStartAge } from './calpers';
-import { incomeTax } from './tax';
+import { incomeTax, payrollTaxMonth, payrollScale, earningsTestHoldback, earningsTestMonthlyLimit, fullRetirementAge } from './tax';
 
 // Calendar month index (year*12 + month) for an ISO date
 const monthIndexOf = (iso: string) => {
@@ -17,8 +17,11 @@ export interface MonthlyData {
   pension: number;
   spousePension: number;
   spouseSalary: number;
-  spouseSS: number;
-  yourSS: number;
+  jobPay: number;           // Your gross pay from a job after retiring
+  spouseSS: number;         // After any earnings-test holdback
+  yourSS: number;           // After any earnings-test holdback
+  spouseSSHeld: number;     // Social Security held back by the earnings test
+  yourSSHeld: number;
   totalIncome: number;
 
   // Expenses & Taxes
@@ -28,10 +31,11 @@ export interface MonthlyData {
   insurance: number;        // Health premium above the employer's contribution
   medicare: number;         // Medicare Part B premiums
   onMedicare: number;       // How many people are on Medicare (0–2)
-  incomeTaxes: number;      // Tax on pensions, 403b withdrawals, SS (take-home pay is already taxed)
+  incomeTaxes: number;      // Tax on pensions, wages, 403b withdrawals, SS (older plans' take-home pay excluded)
+  payrollTaxes: number;     // FICA + CA SDI on gross wages
   conversionTaxes: number;  // Tax on 403b→Roth conversions
   rmdTaxes: number;         // Tax on the RMD top-up, paid out of the withdrawal
-  taxes: number;            // Total taxes (income + conversion + RMD)
+  taxes: number;            // Total taxes (income + payroll + conversion + RMD)
   totalExpenses: number;
 
   // Net Income & Gap
@@ -58,8 +62,10 @@ export interface YearlyData {
   totalPension: number;
   totalSpousePension: number;
   totalSpouseSalary: number;
+  totalJobPay: number;
   totalSpouseSS: number;
   totalYourSS: number;
+  totalSSHeldBack: number;
   totalIncome: number;
 
   totalEssentialSpending: number;
@@ -68,6 +74,7 @@ export interface YearlyData {
   totalInsurance: number;
   totalMedicare: number;
   totalIncomeTaxes: number;
+  totalPayrollTaxes: number;
   totalConversionTaxes: number;
   totalTaxes: number;
   totalExpenses: number;
@@ -133,6 +140,10 @@ export function calculateProjection(config: Config): ProjectionResult {
   const you = config.yourName || 'You';
   const partner = config.spouseName || 'Spouse';
   const rmdAge = rmdStartAge(config.yourBirthDate);
+  const filing = spouse ? 'joint' : 'single';
+  const spouseGross = spouse && config.spousePayIsGross;
+  const yourFRA = fullRetirementAge(config.yourBirthDate);
+  const spouseFRA = fullRetirementAge(config.spouseBirthDate);
 
   // All config spending/income values are MONTHLY figures.
   // CalPERS COLA: first on May 1 of the second calendar year after retiring, then every May.
@@ -147,6 +158,7 @@ export function calculateProjection(config: Config): ProjectionResult {
   const yearlyData: YearlyData[] = [];
 
   let year403bDepleted: number | null = null;
+  const graceYearUsed = { you: false, spouse: false }; // SS earnings test: each person's one grace year
   let peakRothBalance = currentRoth;
   let rothBalanceAt85 = 0;
 
@@ -186,8 +198,10 @@ export function calculateProjection(config: Config): ProjectionResult {
       totalPension: 0,
       totalSpousePension: 0,
       totalSpouseSalary: 0,
+      totalJobPay: 0,
       totalSpouseSS: 0,
       totalYourSS: 0,
+      totalSSHeldBack: 0,
       totalIncome: 0,
       totalEssentialSpending: 0,
       totalDiscretionarySpending: 0,
@@ -195,6 +209,7 @@ export function calculateProjection(config: Config): ProjectionResult {
       totalInsurance: 0,
       totalMedicare: 0,
       totalIncomeTaxes: 0,
+      totalPayrollTaxes: 0,
       totalConversionTaxes: 0,
       totalTaxes: 0,
       totalExpenses: 0,
@@ -227,16 +242,46 @@ export function calculateProjection(config: Config): ProjectionResult {
       ? current403b / rmdDivisor(yourAgeAtYearEnd)
       : 0;
 
-    // Simulate the year's 12 months from the current balances. With bracket taxes, the annual tax
-    // is spread evenly over the months, and the year is re-run until that tax matches the income
-    // it actually produced (403b withdrawals are taxable, and some of them go to paying the tax).
+    // Wages don't depend on balances, so the year's paychecks and the Social Security earnings test are
+    // set up front. The test counts each person's wages before their full retirement age; the holdback
+    // is spread over the months it can apply to (SSA withholds whole checks; the total is the same). In a
+    // person's grace year that's only the SS months they work; otherwise every SS month before FRA.
+    const payScale = payrollScale(taxYear, config.spendingInflation);
+    const monthDates = Array.from({ length: 12 }, (_, m) => firstOfMonthAfter(config.yourRetirementDate, year * 12 + m + 1));
+    const earningsTest = (who: 'you' | 'spouse', birthDate: string, fra: number, ssStartAge: number, ss: number, wages: number[]) => {
+      const beforeFRA = monthDates.map(d => ageOn(birthDate, d) < fra);
+      const ssBeforeFRA = monthDates.map((d, m) => beforeFRA[m] && ageOn(birthDate, d) >= ssStartAge);
+      const wagesBeforeFRA = wages.reduce((sum, w, m) => sum + (beforeFRA[m] ? w : 0), 0);
+      const reachesFRA = beforeFRA.some(b => b) && beforeFRA.some(b => !b);
+      const worked = wages.map(w => w > earningsTestMonthlyLimit(reachesFRA, payScale));
+      const graceYear = !graceYearUsed[who] && ssBeforeFRA.some((on, m) => on && !worked[m]);
+      if (graceYear) graceYearUsed[who] = true;
+      const held = ssBeforeFRA.map((on, m) => on && (!graceYear || worked[m]));
+      const count = held.filter(Boolean).length;
+      return { held, perMonth: count > 0 ? Math.min(ss, earningsTestHoldback(wagesBeforeFRA, reachesFRA, payScale) / count) : 0 };
+    };
+    const jobPayIn = monthDates.map(d => ageOn(config.yourBirthDate, d) < config.jobEndAge ? config.jobPay : 0);
+    const spousePayIn = monthDates.map(d => spouse && d < config.spouseRetirementDate ? config.spouseSalary : 0);
+    const yourTest = earningsTest('you', config.yourBirthDate, yourFRA, config.yourSSStartAge, currentYourSS, jobPayIn);
+    const spouseTest = earningsTest('spouse', config.spouseBirthDate, spouseFRA, config.spouseSSStartAge, currentSpouseSS, spousePayIn);
+
+    // Each month's wages, known up front
+    const wagesIn = monthDates.map((_, m) => jobPayIn[m] + (spouseGross ? spousePayIn[m] : 0));
+    const yearWages = wagesIn.reduce((a, b) => a + b, 0);
+
+    // Simulate the year's 12 months from the current balances. With bracket taxes, the tax the year's
+    // wages add is charged in the months they're paid (like paycheck withholding), the rest of the annual
+    // tax is spread evenly, and the year is re-run until that tax matches the income it actually produced
+    // (403b withdrawals are taxable, and some of them go to paying the tax).
+    let annualWageTax = 0;
     const simulateYear = (annualIncomeTax: number, annualConversionTax: number, annualRmdTax: number) => {
       let bal403b = current403b;
       let balCash = currentCash;
       let balRoth = currentRoth;
       let distributed403b = 0;   // Everything taken out of the 403b this year (counts toward the RMD)
       const months: MonthlyData[] = [];
-      let ordinaryBase = 0;      // Pensions + 403b withdrawals for spending (take-home pay is already taxed)
+      let ordinaryBase = 0;      // Pensions + gross wages + 403b withdrawals for spending
+      let yourWages = 0, spouseWages = 0; // Gross wages so far this year (payroll-tax wage base)
       let conversionIncome = 0;  // Conversions + conversion taxes paid out of the 403b
       let rmdIncome = 0;         // RMD top-up beyond what the year already took out
       let socialSecurity = 0;
@@ -249,23 +294,36 @@ export function calculateProjection(config: Config): ProjectionResult {
 
         // Real calendar month being modeled: the first is the month after your retirement date.
         // Ages come from actual birth dates, not the rounded retirement age.
-        const monthDate = firstOfMonthAfter(config.yourRetirementDate, year * 12 + month + 1);
+        const monthDate = monthDates[month];
         const colaCount = Math.max(0,
           Number(monthDate.slice(0, 4)) - firstColaYear + (Number(monthDate.slice(5, 7)) >= 5 ? 1 : 0));
         const pension = config.pensionStart * Math.pow(1 + config.pensionCOLA, colaCount);
         const yourCurrentAge = ageOn(config.yourBirthDate, monthDate);
         const spouseCurrentAge = spouse ? ageOn(config.spouseBirthDate, monthDate) : 0;
 
-        // Spouse: take-home pay every month that starts before their retirement date, then their own pension
+        // Spouse: pay every month that starts before their retirement date, then their own pension
         const spouseWorking = spouse && monthDate < config.spouseRetirementDate;
-        const spouseSalary = spouseWorking ? config.spouseSalary : 0;
+        const spouseSalary = spousePayIn[month];
         const spousePension = spouse && !spouseWorking ? currentSpousePension : 0;
+        // Your job after retiring: gross pay every month before jobEndAge
+        const jobPay = jobPayIn[month];
 
-        // Social Security: each person's starts in the month they reach their chosen start age
-        const spouseSS = spouse && spouseCurrentAge >= config.spouseSSStartAge ? currentSpouseSS : 0;
-        const yourSS = yourCurrentAge >= config.yourSSStartAge ? currentYourSS : 0;
+        // Social Security: each person's starts in the month they reach their chosen start age,
+        // less any earnings-test holdback before their full retirement age
+        const spouseOnSS = spouse && spouseCurrentAge >= config.spouseSSStartAge;
+        const youOnSS = yourCurrentAge >= config.yourSSStartAge;
+        const spouseSSHeld = spouseOnSS && spouseTest.held[month] ? spouseTest.perMonth : 0;
+        const yourSSHeld = youOnSS && yourTest.held[month] ? yourTest.perMonth : 0;
+        const spouseSS = spouseOnSS ? currentSpouseSS - spouseSSHeld : 0;
+        const yourSS = youOnSS ? currentYourSS - yourSSHeld : 0;
 
-        const totalIncome = pension + spousePension + spouseSalary + spouseSS + yourSS;
+        const totalIncome = pension + spousePension + spouseSalary + jobPay + spouseSS + yourSS;
+
+        // Payroll tax (FICA + CA SDI) on this month's gross wages. Older plans' take-home pay is already net.
+        const spouseGrossPay = spouseGross ? spouseSalary : 0;
+        const payrollTaxes = payrollTaxMonth([jobPay, spouseGrossPay], [yourWages, spouseWages], yourWages + spouseWages, payScale, filing);
+        yourWages += jobPay;
+        spouseWages += spouseGrossPay;
 
         const essentialSpending = currentEssentialSpending;
         const discretionarySpending = currentDiscretionarySpending;
@@ -286,10 +344,10 @@ export function calculateProjection(config: Config): ProjectionResult {
           * Math.pow(1 + config.healthcareInflation, calendarYear - config.partBYear);
 
         // Income taxes: the year's bracket tax spread monthly, or the flat rate on taxable income.
-        // Take-home pay is already taxed by withholding, so it's left out of both.
+        // Take-home pay (older plans) is already taxed by withholding, so it's left out of both.
         const incomeTaxes = config.taxFromBrackets
-          ? annualIncomeTax / 12
-          : (totalIncome - spouseSalary) * config.effectiveTaxRate;
+          ? (annualIncomeTax - annualWageTax) / 12 + (yearWages > 0 ? annualWageTax * wagesIn[month] / yearWages : 0)
+          : (totalIncome - (spouseSalary - spouseGrossPay)) * config.effectiveTaxRate;
 
         // --- Step 1: Roth conversion (account TRANSFER, NOT spending) ---
         let withdrawal403b = 0;
@@ -321,8 +379,8 @@ export function calculateProjection(config: Config): ProjectionResult {
         }
 
         // --- Step 2: Total Spend = REAL living expenses only (no conversion costs) ---
-        const totalExpenses = essentialSpending + discretionarySpending + debtPayments + insurance + medicare + incomeTaxes;
-        const netIncome = totalIncome - incomeTaxes - insurance - medicare;
+        const totalExpenses = essentialSpending + discretionarySpending + debtPayments + insurance + medicare + incomeTaxes + payrollTaxes;
+        const netIncome = totalIncome - incomeTaxes - payrollTaxes - insurance - medicare;
 
         // Gap: income vs real living expenses only
         const gap = totalExpenses - totalIncome;
@@ -374,7 +432,7 @@ export function calculateProjection(config: Config): ProjectionResult {
           balCash += rmdWithdrawal - rmdTaxes;
         }
 
-        ordinaryBase += pension + spousePension + withdrawal403b;
+        ordinaryBase += pension + spousePension + spouseGrossPay + jobPay + withdrawal403b;
         conversionIncome += conversionToRoth;
         rmdIncome += rmdWithdrawal;
         socialSecurity += spouseSS + yourSS;
@@ -386,8 +444,11 @@ export function calculateProjection(config: Config): ProjectionResult {
           pension,
           spousePension,
           spouseSalary,
+          jobPay,
           spouseSS,
           yourSS,
+          spouseSSHeld,
+          yourSSHeld,
           totalIncome,
           essentialSpending,
           discretionarySpending,
@@ -396,9 +457,10 @@ export function calculateProjection(config: Config): ProjectionResult {
           medicare,
           onMedicare: medicareCount,
           incomeTaxes,
+          payrollTaxes,
           conversionTaxes,
           rmdTaxes,
-          taxes: incomeTaxes + conversionTaxes + rmdTaxes,
+          taxes: incomeTaxes + payrollTaxes + conversionTaxes + rmdTaxes,
           totalExpenses,
           netIncome,
           gap,
@@ -417,7 +479,7 @@ export function calculateProjection(config: Config): ProjectionResult {
     };
 
     const taxOn = (ordinaryIncome: number, socialSecurity: number) =>
-      incomeTax({ ordinaryIncome, socialSecurity, seniors, taxYear, indexing: config.spendingInflation, filing: spouse ? 'joint' : 'single' }).total;
+      incomeTax({ ordinaryIncome, socialSecurity, seniors, taxYear, indexing: config.spendingInflation, filing }).total;
 
     let annualIncomeTax = 0;
     let annualConversionTax = 0;
@@ -429,10 +491,13 @@ export function calculateProjection(config: Config): ProjectionResult {
         const base = taxOn(run.ordinaryBase, run.socialSecurity);
         const withConversions = taxOn(run.ordinaryBase + run.conversionIncome, run.socialSecurity);
         const withRmd = taxOn(run.ordinaryBase + run.conversionIncome + run.rmdIncome, run.socialSecurity);
+        const wageTax = yearWages > 0 ? base - taxOn(run.ordinaryBase - yearWages, run.socialSecurity) : 0;
         const settled = Math.abs(base - annualIncomeTax) < 1
+          && Math.abs(wageTax - annualWageTax) < 1
           && Math.abs(withConversions - base - annualConversionTax) < 1
           && Math.abs(withRmd - withConversions - annualRmdTax) < 1;
         annualIncomeTax = base;
+        annualWageTax = wageTax;
         annualConversionTax = withConversions - base;
         annualRmdTax = withRmd - withConversions;
         run = simulateYear(annualIncomeTax, annualConversionTax, annualRmdTax);
@@ -476,6 +541,8 @@ export function calculateProjection(config: Config): ProjectionResult {
       yearObj.totalPension += m.pension;
       yearObj.totalSpousePension += m.spousePension;
       yearObj.totalSpouseSalary += m.spouseSalary;
+      yearObj.totalJobPay += m.jobPay;
+      yearObj.totalSSHeldBack += m.spouseSSHeld + m.yourSSHeld;
       yearObj.totalSpouseSS += m.spouseSS;
       yearObj.totalYourSS += m.yourSS;
       yearObj.totalIncome += m.totalIncome;
@@ -485,6 +552,7 @@ export function calculateProjection(config: Config): ProjectionResult {
       yearObj.totalInsurance += m.insurance;
       yearObj.totalMedicare += m.medicare;
       yearObj.totalIncomeTaxes += m.incomeTaxes;
+      yearObj.totalPayrollTaxes += m.payrollTaxes;
       yearObj.totalConversionTaxes += m.conversionTaxes;
       yearObj.totalTaxes += m.taxes;
       yearObj.totalExpenses += m.totalExpenses;
@@ -506,6 +574,8 @@ export function calculateProjection(config: Config): ProjectionResult {
     const notes: string[] = [];
     if (year === 0) notes.push('🎉 Retirement begins');
     if (yearObj.totalSpouseSalary > 0) notes.push(`💼 ${partner} still working`);
+    if (yearObj.totalJobPay > 0) notes.push(`💼 ${you} working: ${formatNote(config.jobPay)}/mo gross`);
+    if (yearObj.totalSSHeldBack > 0) notes.push(`✂️ SS earnings test holds back ${formatNote(yearObj.totalSSHeldBack)} (credited back after full retirement age)`);
 
     const prevYear = yearlyData[yearlyData.length - 1];
 
@@ -515,8 +585,8 @@ export function calculateProjection(config: Config): ProjectionResult {
       return get(m) > 0 && (before === undefined || get(before) === 0);
     });
     if (startedThisYear(m => m.spousePension)) notes.push(`✅ ${partner}'s pension begins (+${formatNote(config.spousePension)}/mo)`);
-    if (startedThisYear(m => m.spouseSS)) notes.push(`✅ ${partner}'s Social Security begins at ${config.spouseSSStartAge}`);
-    if (startedThisYear(m => m.yourSS)) notes.push(`✅ ${you}'s Social Security begins at ${config.yourSSStartAge}`);
+    if (startedThisYear(m => m.spouseSS + m.spouseSSHeld)) notes.push(`✅ ${partner}'s Social Security begins at ${config.spouseSSStartAge}`);
+    if (startedThisYear(m => m.yourSS + m.yourSSHeld)) notes.push(`✅ ${you}'s Social Security begins at ${config.yourSSStartAge}`);
 
     // Healthcare transitions within the year (Medicare enrollment, premium vs. employer contribution)
     yearObj.months.forEach((m, i) => {

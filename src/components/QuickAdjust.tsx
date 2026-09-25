@@ -67,10 +67,21 @@ export const QuickAdjust: FC<Props> = ({ config, setConfig }) => {
             : `Under the minimum retirement age (${pension.formula.minAge}) for your formula`} />
         {config.hasSpouse && (
           <DateField label={`${partner}'s retirement date`} name="spouseRetirementDate" value={config.spouseRetirementDate} onChange={onChange}
-            hint="Their take-home pay ends and their pension starts" />
+            hint="Their pay ends and their pension starts" />
         )}
         <Slider label="Your Social Security starts at" name="yourSSStartAge" display={`Age ${config.yourSSStartAge}`}
           value={config.yourSSStartAge} min={62} max={70} step={1} onChange={onChange} />
+      </Group>
+
+      <Group title="Work after retirement">
+        <Slider label="Job pay (gross)" name="jobPay" display={config.jobPay > 0 ? `${$(config.jobPay)}/mo` : 'None'}
+          value={config.jobPay} min={0} max={rangeMax(config.jobPay, 20000, 1000)} step={100} onChange={onChange}
+          hint="Taxed on top of your pension, plus FICA and CA SDI. At a CalPERS employer: 180-day wait, max 960 hrs/yr." />
+        <Slider label="Work until" name="jobEndAge" display={`Age ${config.jobEndAge}`}
+          value={config.jobEndAge} min={50} max={80} step={1} onChange={onChange}
+          hint={config.jobPay > 0 && config.jobEndAge > config.yourSSStartAge && config.yourSSStartAge < 67
+            ? 'Overlaps your Social Security before full retirement age: the earnings test holds some back'
+            : 'Starts the month after you retire'} />
       </Group>
 
       <Group title="Spending (monthly)">
