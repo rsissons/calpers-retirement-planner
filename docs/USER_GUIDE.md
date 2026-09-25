@@ -8,16 +8,41 @@ All money is **monthly** unless the label says otherwise. Every change applies i
 
 ## 1. Before you start: gather these
 
+**First, which system are you in?**
+- **CalSTRS:** teachers and other certificated school staff (K-12 and community college).
+- **CalPERS:** state, city, county and special-district employees, and classified school staff (office, custodial, transportation, IT).
+
+Your paystub shows which one takes your retirement contribution. In the planner, pick it first: it's the top card on **Your Numbers**. The sample plan starts on CalPERS.
+
+### If you're in CalPERS
+
+| Item | Where to find it |
+|---|---|
+| Retirement formula (for example "School 2% at 55" or "Local Miscellaneous 2% at 62"; hired before 2013 is usually classic, 2013 or later PEPRA) | Annual Member Statement, or myCalPERS (my.calpers.ca.gov) |
+| Service credit, and the date it's as of | Annual Member Statement or myCalPERS |
+| Final compensation: highest 12 months (classic; some employers use 36) or 36 months (PEPRA) | A myCalPERS retirement estimate shows the figure CalPERS used |
+| A retirement estimate for your planned date (for the option factor and to check the planner) | myCalPERS Retirement Estimate Calculator |
+| Retiree health premiums and your employer's retiree contribution | CalPERS health plan rates for your region and plan; HR or your MOU |
+| Whether you're earning Social Security | Your paystub (Social Security or OASDI tax); many CalPERS agencies pay in, some don't |
+
+### If you're in CalSTRS
+
+| Item | Where to find it |
+|---|---|
+| Retirement formula: 2% at 60 if first hired into CalSTRS-covered work before 2013, 2% at 62 after | Retirement Progress Report in myCalSTRS (calstrs.com/mycalstrs) |
+| Service credit, and the date it's as of | Retirement Progress Report |
+| Final compensation: highest 36 months, or 12 months for 2% at 60 with 25+ years | A myCalSTRS retirement estimate |
+| A retirement estimate for your planned date (the option factor uses the Member-Only Benefit) | myCalSTRS |
+| Retiree health: CalSTRS has none, so your district's retiree plan rates and what the district pays for retirees (often $0, or only until 65) | District HR or benefits office |
+| Social Security: teaching pay usually isn't covered, so use other work's record or 0. Without 40 quarters, Medicare Part A isn't free | ssa.gov/myaccount |
+
+### Everyone
+
 | Item | Where to find it | Used for |
 |---|---|---|
-| Retirement formula (for example "School 2% at 55", "Local Miscellaneous 2% at 62" or "CalSTRS 2% at 60") | CalPERS Annual Member Statement or myCalPERS; CalSTRS Retirement Progress Report in myCalSTRS | The pension |
-| Service credit, and the date it's as of | The same statement | The pension |
-| A retirement estimate for your planned date | myCalPERS Retirement Estimate Calculator, or a myCalSTRS estimate | Final compensation, beneficiary option factor, and checking the planner's pension |
 | Social Security estimate at the age you plan to start | ssa.gov/myaccount | Income |
-| 403(b), 457(b), Roth IRA and savings balances, with dates | Latest statements | Savings |
+| 403(b), 457(b), Roth IRA and savings balances, with dates (include a CalSTRS Defined Benefit Supplement balance in savings) | Latest statements | Savings |
 | Monthly retirement contributions | Paystub | Savings growth until you retire |
-| Retiree health premiums for your plan and region | CalPERS health rates (search "CalPERS health plan rates"), or your school district's retiree plan | Healthcare costs |
-| Your employer's contribution toward retiree health | HR, benefits office, or your bargaining unit's MOU | Healthcare costs |
 | Monthly spending, and each loan's payment and payoff date | Bank and card statements, loan statements | Expenses |
 
 If your spouse or partner is included, you'll also want their gross pay (from a paystub), any pension of their own, and their Social Security estimate.
@@ -58,6 +83,9 @@ For a job you'd take after retiring, full-time or part-time. Leave the pay at 0 
 
 ### Your Pension (CalPERS or CalSTRS)
 
+This is the first card on Your Numbers, because everything else follows it.
+
+- **Pension system:** tap CalPERS or CalSTRS. Switching moves the formula to that system's first choice (CalPERS School 2% at 55, or CalSTRS 2% at 60). The formula list then shows only that system's formulas. The header's system button, shown on every page, brings you back here.
 - **Retirement formula:** pick yours from the list.
   - **CalPERS:** it's printed on your Annual Member Statement. Classic members hired before 2013 usually have a "2% at 55"-style formula; PEPRA members hired in 2013 or later usually have "2% at 62" (miscellaneous) or "2%/2.5%/2.7% at 57" (safety).
   - **CalSTRS:** "2% at 60" if you were first hired into CalSTRS-covered work before 2013, "2% at 62" after. It's on your Retirement Progress Report. The page's labels, hints and COLA rules switch to CalSTRS when you pick one.

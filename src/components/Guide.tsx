@@ -10,11 +10,20 @@ const Section: FC<{ title: string; children: ReactNode }> = ({ title, children }
   </section>
 );
 
-const Item: FC<{ what: string; where: ReactNode }> = ({ what, where }) => (
-  <li className="flex flex-col sm:flex-row sm:gap-3 py-1.5 border-b border-gray-100 last:border-0">
-    <span className="font-semibold text-gray-800 sm:w-56 shrink-0">{what}</span>
+// A label and where to find it: side by side on wider screens, or stacked (inside the narrower system cards)
+const Item: FC<{ what: string; where: ReactNode; stacked?: boolean }> = ({ what, where, stacked }) => (
+  <li className={`flex flex-col py-1.5 border-b border-gray-100 last:border-0 ${stacked ? '' : 'sm:flex-row sm:gap-3'}`}>
+    <span className={`font-semibold text-gray-800 shrink-0 ${stacked ? '' : 'sm:w-56'}`}>{what}</span>
     <span className="text-gray-600">{where}</span>
   </li>
+);
+
+const SystemList: FC<{ name: string; link: ReactNode; children: ReactNode }> = ({ name, link, children }) => (
+  <div className="rounded-lg border border-gray-200 bg-gray-50/60 p-4">
+    <p className="font-bold text-[#15325b]">If you're in {name}</p>
+    <p className="text-xs text-gray-500 mb-2">Sign in at {link}</p>
+    <ul>{children}</ul>
+  </div>
 );
 
 export const Guide: FC = () => (
@@ -35,15 +44,31 @@ export const Guide: FC = () => (
     </Section>
 
     <Section title="What to gather">
+      <p><b>First, which system are you in?</b> Teachers and other certificated school staff (K-12 and community college) are in <b>CalSTRS</b>. State, city, county and special-district employees, and classified school staff (office, custodial, transportation, IT), are in <b>CalPERS</b>. Your paystub shows which one takes your retirement contribution. Gather the list for your system, plus the list for everyone.</p>
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-4 pt-1">
+        <SystemList name="CalPERS" link={<a className="text-[#0072B2] underline" href="https://my.calpers.ca.gov" target="_blank" rel="noreferrer">my.calpers.ca.gov</a>}>
+          <Item stacked what="Retirement formula" where="Your Annual Member Statement or myCalPERS. Pick the matching one in the list (School, Local or State; Miscellaneous or Safety). Hired before 2013 is usually classic; 2013 or later is PEPRA." />
+          <Item stacked what="Service credit" where="Annual Member Statement or myCalPERS, with the date it's as of." />
+          <Item stacked what="Final compensation" where="Highest 12 consecutive months of pay (classic; some employers use 36) or 36 months (PEPRA), monthly." />
+          <Item stacked what="Retirement estimate" where="myCalPERS Retirement Estimate Calculator, for your planned date. Divide your option's amount by the unmodified amount for the option factor." />
+          <Item stacked what="Retiree health" where="CalPERS health plan rates for your region and plan, and your employer's retiree contribution (HR or your MOU)." />
+          <Item stacked what="Social Security" where="Many CalPERS agencies pay into Social Security and some don't. If your paystub shows Social Security (OASDI) tax, you're earning it." />
+        </SystemList>
+        <SystemList name="CalSTRS" link={<a className="text-[#0072B2] underline" href="https://www.calstrs.com/mycalstrs" target="_blank" rel="noreferrer">calstrs.com/mycalstrs</a>}>
+          <Item stacked what="Retirement formula" where="2% at 60 if you were first hired into CalSTRS-covered work before 2013; 2% at 62 after. It's on your Retirement Progress Report in myCalSTRS." />
+          <Item stacked what="Service credit" where="Retirement Progress Report, with the date it's as of." />
+          <Item stacked what="Final compensation" where="Highest 36 consecutive months of pay, monthly; 12 months if you're 2% at 60 with 25+ years." />
+          <Item stacked what="Retirement estimate" where="A myCalSTRS retirement estimate for your planned date. Divide your option's amount by the Member-Only Benefit for the option factor." />
+          <Item stacked what="Retiree health" where="CalSTRS has no retiree health plan. Get your district's retiree plan rates and what the district pays for retirees (often $0, or only until 65)." />
+          <Item stacked what="Social Security" where="Teaching pay usually isn't covered. Use your SSA statement for other work, or 0. Without 40 quarters, Medicare Part A isn't free." />
+        </SystemList>
+      </div>
+      <p className="font-semibold text-gray-800 pt-3">Everyone</p>
       <ul>
-        <Item what="Retirement formula" where={<>CalPERS: Annual Member Statement, or myCalPERS (<a className="text-[#0072B2] underline" href="https://my.calpers.ca.gov" target="_blank" rel="noreferrer">my.calpers.ca.gov</a>). CalSTRS: 2% at 60 if first hired before 2013, 2% at 62 after; it's on your Retirement Progress Report in myCalSTRS (<a className="text-[#0072B2] underline" href="https://www.calstrs.com/mycalstrs" target="_blank" rel="noreferrer">calstrs.com/mycalstrs</a>).</>} />
-        <Item what="Service credit" where="CalPERS Annual Member Statement or myCalPERS; CalSTRS Retirement Progress Report. Note the date it's as of." />
-        <Item what="Final compensation" where="CalPERS: highest 12 (classic) or 36 (PEPRA) consecutive months of pay. CalSTRS: highest 36 months, or 12 with 25+ years under 2% at 60. Monthly. A retirement estimate shows the figure it used." />
-        <Item what="Beneficiary option factor" where="Run a myCalPERS or myCalSTRS estimate and divide your chosen option's amount by the unmodified amount (CalSTRS: the Member-Only Benefit). 100% if you'll take that." />
         <Item what="Social Security" where={<>Your statement at <a className="text-[#0072B2] underline" href="https://www.ssa.gov/myaccount/" target="_blank" rel="noreferrer">ssa.gov/myaccount</a>, at the age you plan to start.</>} />
-        <Item what="403(b) / 457(b), Roth, savings" where="Your latest statements, with their dates." />
-        <Item what="Retiree health" where="CalPERS health plan rates for your region and plan, or your school district's retiree plan (CalSTRS has none), and your employer's retiree contribution (HR or your MOU)." />
+        <Item what="403(b) / 457(b), Roth, savings" where="Your latest statements, with their dates. Include a CalSTRS Defined Benefit Supplement balance in savings." />
         <Item what="Spending" where="A year of bank and card statements, or a budgeting app. Split it into essential and discretionary; list loans separately." />
+        <Item what="Spouse or partner" where="Their gross pay (paystub), any pension of their own, and their Social Security estimate." />
       </ul>
     </Section>
 

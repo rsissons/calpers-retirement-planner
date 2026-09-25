@@ -1,7 +1,8 @@
 import type { FC } from 'react';
 import type { Config } from '../config';
 import { columnLabels, calculatePension, ageOn, rmdStartAge } from '../calpers';
-import { FORMULAS } from '../formulas';
+import { FORMULAS, DEFAULT_FORMULA_ID, systemOf } from '../formulas';
+import type { PensionSystem } from '../formulas';
 import { project403bAtRetirement, projectCashAtRetirement } from '../savings';
 import { useConfigChange } from '../useConfigChange';
 import { Card, DateField, Hint, NumberField, SliderField, TextField, Toggle } from './Fields';
@@ -14,6 +15,10 @@ interface Props {
 const $ = (v: number) => new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD', maximumFractionDigits: 0 }).format(v);
 const pct = (v: number, digits = 1) => `${(v * 100).toFixed(digits)}%`;
 const CATEGORIES = [...new Set(FORMULAS.map(f => f.category))];
+const SYSTEMS: { id: PensionSystem; who: string; first: string }[] = [
+  { id: 'CalPERS', who: 'State, city, county and special-district staff, and classified school staff', first: DEFAULT_FORMULA_ID },
+  { id: 'CalSTRS', who: 'Teachers and other certificated school staff (K-12 and community college)', first: 'calstrs-2-at-60' },
+];
 
 export const Settings: FC<Props> = ({ config, setConfig }) => {
   const onChange = useConfigChange(setConfig);
@@ -40,6 +45,11 @@ export const Settings: FC<Props> = ({ config, setConfig }) => {
     }));
   };
   const addDebt = () => setConfig(prev => ({ ...prev, debts: [...prev.debts, { name: 'New loan', payment: 0, endDate: prev.yourRetirementDate }] }));
+  // Switching systems moves the formula to that system's first choice; the dropdown then lists only its formulas
+  const pickSystem = (to: PensionSystem) => {
+    if (to === sys) return;
+    setConfig(prev => ({ ...prev, pensionFormulaId: SYSTEMS.find(x => x.id === to)!.first }));
+  };
   const removeDebt = (i: number) => setConfig(prev => ({ ...prev, debts: prev.debts.filter((_, j) => j !== i) }));
 
   return (
@@ -54,65 +64,33 @@ export const Settings: FC<Props> = ({ config, setConfig }) => {
 
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
 
-        <Card title="About You">
-          <TextField label="Plan name" name="planName" value={config.planName} onChange={onChange} hint="Shown at the top of the menu and on saved files." />
-          <TextField label="Your first name" name="yourName" value={config.yourName} onChange={onChange} />
-          <DateField label="Your birth date" name="yourBirthDate" value={config.yourBirthDate} onChange={onChange} />
-          <DateField label="Your retirement date" name="yourRetirementDate" value={config.yourRetirementDate} onChange={onChange}
-            hint="Your last day of work. The projection starts the month after." />
-          <SliderField label="Retirement age" name="retirementAge" value={pension.ageYears} min={Math.max(50, earliestAge)} max={75} step={1}
-            display={`${pension.ageYears}y ${pension.ageMonths}m`} onChange={onChange} hint="Moves the retirement date to that age, same month and day." />
-          <NumberField label="Your Social Security (monthly, at your start age)" name="yourSS" value={config.yourSS} step={10} prefix="$" onChange={onChange}
-            hint={strs
-              ? "From your statement at ssa.gov/myaccount. Most teachers didn't pay Social Security on CalSTRS pay, so use what you earned from other jobs, or 0. The WEP and GPO cuts were repealed in January 2025."
-              : "From your statement at ssa.gov/myaccount. Enter 0 if you don't get Social Security."} />
-          <SliderField label="Your Social Security starts at" name="yourSSStartAge" value={config.yourSSStartAge} min={62} max={70} step={1}
-            display={`Age ${config.yourSSStartAge}`} onChange={onChange} />
-          <SliderField label="Plan through your age" name="projectionEndAge" value={config.projectionEndAge} min={80} max={105} step={1}
-            display={`${config.projectionEndAge}`} onChange={onChange} hint="How long the money has to last. 95 is a common, careful choice." />
-        </Card>
-
-        <Card title="Spouse or Partner">
-          <Toggle label="Plan for two people" name="hasSpouse" checked={config.hasSpouse} onChange={onChange}
-            hint={config.hasSpouse ? 'Taxes are married filing jointly.' : 'Taxes are filed single. Turn this on to add a spouse or partner.'} />
-          {config.hasSpouse && <>
-            <TextField label="Their first name" name="spouseName" value={config.spouseName} onChange={onChange} />
-            <DateField label="Their birth date" name="spouseBirthDate" value={config.spouseBirthDate} onChange={onChange}
-              hint={`${partner} will be ${Math.floor(spouseAgeAtYourRetirement)} when ${you} retires.`} />
-            <NumberField label={config.spousePayIsGross ? 'Their gross pay (monthly, while working)' : 'Their take-home pay (monthly, while working)'} name="spouseSalary" value={config.spouseSalary} step={10} prefix="$" onChange={onChange}
-              hint={config.spousePayIsGross
-                ? 'Gross pay from their paystub, before any taxes. Taxed with the pensions, plus FICA and CA SDI. 0 if not working.'
-                : 'Net pay, not taxed again. This plan was saved before 1.2.0; tick the box below and enter gross pay for the full tax math.'} />
-            <Toggle label="That's gross pay (before tax)" name="spousePayIsGross" checked={config.spousePayIsGross} onChange={onChange}
-              hint="Leave this on. Off only keeps older plans that entered take-home pay." />
-            <DateField label="Their retirement date" name="spouseRetirementDate" value={config.spouseRetirementDate} onChange={onChange}
-              hint="Their pay stops; their own pension (below) starts." />
-            <NumberField label="Their own pension (monthly, from their retirement)" name="spousePension" value={config.spousePension} step={10} prefix="$" onChange={onChange}
-              hint="CalPERS, CalSTRS or any other pension. Taxable. 0 if none." />
-            <NumberField label="Their Social Security (monthly, at their start age)" name="spouseSS" value={config.spouseSS} step={10} prefix="$" onChange={onChange} />
-            <SliderField label="Their Social Security starts at" name="spouseSSStartAge" value={config.spouseSSStartAge} min={62} max={70} step={1}
-              display={`Age ${config.spouseSSStartAge}`} onChange={onChange} />
-          </>}
-        </Card>
-
-        <Card title="Work After Retirement">
-          <NumberField label={`${you}'s job pay (gross, monthly)`} name="jobPay" value={config.jobPay} step={100} prefix="$" onChange={onChange}
-            hint="Pay from a job after you retire, before tax. Starts the month after your retirement date. Taxed with your pension, plus FICA and CA SDI. 0 if none." />
-          <SliderField label="Work until age" name="jobEndAge" value={config.jobEndAge} min={50} max={80} step={1}
-            display={`${config.jobEndAge}`} onChange={onChange}
-            hint="If you draw Social Security before full retirement age, $1 is held back for every $2 of wages over $24,480/yr (2026)." />
-          <Toggle label={strs ? 'This job is in a California public school (CalSTRS rules)' : 'This job is with a CalPERS employer (retired annuitant)'}
-            name="jobAtPensionEmployer" checked={config.jobAtPensionEmployer} onChange={onChange}
-            hint={strs
-              ? 'On: pay in the first 180 days after retiring comes off your pension dollar for dollar, and after that, pay over the yearly earnings limit ($59,565 for 2026-27) is withheld from it. Off: a job outside California public schools, which doesn\'t affect the pension.'
-              : 'On: the job starts after the 180-day wait CalPERS requires. You can also work at most 960 hours per fiscal year (not modeled; keep the pay realistic). Off: private-sector work, which doesn\'t affect the pension.'} />
-        </Card>
-
-        <Card title={`${sys} Pension`} wide>
+        <Card title={`Your Pension: ${sys}`} wide id="pension-setup">
+          <div className="rounded-lg border border-blue-200 bg-blue-50 px-4 py-3 text-sm text-blue-900">
+            <b>Start here:</b> choose your pension system, then your retirement formula. Everything below (the age factors, the COLA,
+            the labels and the working-after-retirement rules) follows that choice. The sample plan starts on CalPERS.
+          </div>
           <div>
-            <label htmlFor="f-pensionFormulaId" className="block text-sm font-medium text-gray-700 mb-1">Your retirement formula</label>
+            <p id="f-system-label" className="block text-sm font-medium text-gray-700 mb-2">Pension system</p>
+            <div role="radiogroup" aria-labelledby="f-system-label" className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+              {SYSTEMS.map(x => {
+                const on = x.id === sys;
+                return (
+                  <button key={x.id} type="button" role="radio" aria-checked={on} onClick={() => pickSystem(x.id)}
+                    className={`text-left rounded-lg border-2 px-4 py-3 transition-colors ${on ? 'border-[#0072B2] bg-[#0072B2]/5' : 'border-gray-200 hover:border-gray-300 bg-white'}`}>
+                    <span className="flex items-center gap-2">
+                      <span className={`w-4 h-4 rounded-full border-2 shrink-0 ${on ? 'border-[#0072B2] bg-[#0072B2] ring-2 ring-inset ring-white' : 'border-gray-300'}`} />
+                      <span className="font-bold text-gray-900">{x.id}</span>
+                    </span>
+                    <span className="block text-xs text-gray-500 mt-1 pl-6">{x.who}</span>
+                  </button>
+                );
+              })}
+            </div>
+          </div>
+          <div>
+            <label htmlFor="f-pensionFormulaId" className="block text-sm font-medium text-gray-700 mb-1">Your {sys} retirement formula</label>
             <select id="f-pensionFormulaId" name="pensionFormulaId" value={config.pensionFormulaId} onChange={onChange} className="w-full border border-gray-300 rounded-md shadow-sm p-2 bg-gray-50 text-sm">
-              {CATEGORIES.map(cat => (
+              {CATEGORIES.filter(cat => systemOf(FORMULAS.find(f => f.category === cat)!) === sys).map(cat => (
                 <optgroup key={cat} label={cat}>
                   {FORMULAS.filter(f => f.category === cat).map(f => <option key={f.id} value={f.id}>{cat} · {f.name}</option>)}
                 </optgroup>
@@ -200,6 +178,61 @@ export const Settings: FC<Props> = ({ config, setConfig }) => {
               {formula.careerFactor && <Hint>With {formula.careerFactor.serviceYears}+ years of service credit, add {pct(formula.careerFactor.add)} to the factor, up to {pct(formula.careerFactor.max)} (the career factor).</Hint>}
             </div>
           </>}
+        </Card>
+
+
+        <Card title="About You">
+          <TextField label="Plan name" name="planName" value={config.planName} onChange={onChange} hint="Shown at the top of the menu and on saved files." />
+          <TextField label="Your first name" name="yourName" value={config.yourName} onChange={onChange} />
+          <DateField label="Your birth date" name="yourBirthDate" value={config.yourBirthDate} onChange={onChange} />
+          <DateField label="Your retirement date" name="yourRetirementDate" value={config.yourRetirementDate} onChange={onChange}
+            hint="Your last day of work. The projection starts the month after." />
+          <SliderField label="Retirement age" name="retirementAge" value={pension.ageYears} min={Math.max(50, earliestAge)} max={75} step={1}
+            display={`${pension.ageYears}y ${pension.ageMonths}m`} onChange={onChange} hint="Moves the retirement date to that age, same month and day." />
+          <NumberField label="Your Social Security (monthly, at your start age)" name="yourSS" value={config.yourSS} step={10} prefix="$" onChange={onChange}
+            hint={strs
+              ? "From your statement at ssa.gov/myaccount. Most teachers didn't pay Social Security on CalSTRS pay, so use what you earned from other jobs, or 0. The WEP and GPO cuts were repealed in January 2025."
+              : "From your statement at ssa.gov/myaccount. Enter 0 if you don't get Social Security."} />
+          <SliderField label="Your Social Security starts at" name="yourSSStartAge" value={config.yourSSStartAge} min={62} max={70} step={1}
+            display={`Age ${config.yourSSStartAge}`} onChange={onChange} />
+          <SliderField label="Plan through your age" name="projectionEndAge" value={config.projectionEndAge} min={80} max={105} step={1}
+            display={`${config.projectionEndAge}`} onChange={onChange} hint="How long the money has to last. 95 is a common, careful choice." />
+        </Card>
+
+        <Card title="Spouse or Partner">
+          <Toggle label="Plan for two people" name="hasSpouse" checked={config.hasSpouse} onChange={onChange}
+            hint={config.hasSpouse ? 'Taxes are married filing jointly.' : 'Taxes are filed single. Turn this on to add a spouse or partner.'} />
+          {config.hasSpouse && <>
+            <TextField label="Their first name" name="spouseName" value={config.spouseName} onChange={onChange} />
+            <DateField label="Their birth date" name="spouseBirthDate" value={config.spouseBirthDate} onChange={onChange}
+              hint={`${partner} will be ${Math.floor(spouseAgeAtYourRetirement)} when ${you} retires.`} />
+            <NumberField label={config.spousePayIsGross ? 'Their gross pay (monthly, while working)' : 'Their take-home pay (monthly, while working)'} name="spouseSalary" value={config.spouseSalary} step={10} prefix="$" onChange={onChange}
+              hint={config.spousePayIsGross
+                ? 'Gross pay from their paystub, before any taxes. Taxed with the pensions, plus FICA and CA SDI. 0 if not working.'
+                : 'Net pay, not taxed again. This plan was saved before 1.2.0; tick the box below and enter gross pay for the full tax math.'} />
+            <Toggle label="That's gross pay (before tax)" name="spousePayIsGross" checked={config.spousePayIsGross} onChange={onChange}
+              hint="Leave this on. Off only keeps older plans that entered take-home pay." />
+            <DateField label="Their retirement date" name="spouseRetirementDate" value={config.spouseRetirementDate} onChange={onChange}
+              hint="Their pay stops; their own pension (below) starts." />
+            <NumberField label="Their own pension (monthly, from their retirement)" name="spousePension" value={config.spousePension} step={10} prefix="$" onChange={onChange}
+              hint="CalPERS, CalSTRS or any other pension. Taxable. 0 if none." />
+            <NumberField label="Their Social Security (monthly, at their start age)" name="spouseSS" value={config.spouseSS} step={10} prefix="$" onChange={onChange} />
+            <SliderField label="Their Social Security starts at" name="spouseSSStartAge" value={config.spouseSSStartAge} min={62} max={70} step={1}
+              display={`Age ${config.spouseSSStartAge}`} onChange={onChange} />
+          </>}
+        </Card>
+
+        <Card title="Work After Retirement">
+          <NumberField label={`${you}'s job pay (gross, monthly)`} name="jobPay" value={config.jobPay} step={100} prefix="$" onChange={onChange}
+            hint="Pay from a job after you retire, before tax. Starts the month after your retirement date. Taxed with your pension, plus FICA and CA SDI. 0 if none." />
+          <SliderField label="Work until age" name="jobEndAge" value={config.jobEndAge} min={50} max={80} step={1}
+            display={`${config.jobEndAge}`} onChange={onChange}
+            hint="If you draw Social Security before full retirement age, $1 is held back for every $2 of wages over $24,480/yr (2026)." />
+          <Toggle label={strs ? 'This job is in a California public school (CalSTRS rules)' : 'This job is with a CalPERS employer (retired annuitant)'}
+            name="jobAtPensionEmployer" checked={config.jobAtPensionEmployer} onChange={onChange}
+            hint={strs
+              ? 'On: pay in the first 180 days after retiring comes off your pension dollar for dollar, and after that, pay over the yearly earnings limit ($59,565 for 2026-27) is withheld from it. Off: a job outside California public schools, which doesn\'t affect the pension.'
+              : 'On: the job starts after the 180-day wait CalPERS requires. You can also work at most 960 hours per fiscal year (not modeled; keep the pay realistic). Off: private-sector work, which doesn\'t affect the pension.'} />
         </Card>
 
         <Card title="Savings & Investments">

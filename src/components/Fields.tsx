@@ -7,8 +7,8 @@ type OnChange = (e: ChangeEvent<HTMLInputElement | HTMLSelectElement>) => void;
 
 const inputClass = 'w-full border border-gray-300 rounded-md shadow-sm p-2 bg-gray-50 text-sm';
 
-export const Card: FC<{ title: string; wide?: boolean; children: ReactNode }> = ({ title, wide, children }) => (
-  <section className={`bg-white p-5 sm:p-6 rounded-lg shadow-sm border border-gray-200 ${wide ? 'md:col-span-2' : ''}`}>
+export const Card: FC<{ title: string; wide?: boolean; id?: string; children: ReactNode }> = ({ title, wide, id, children }) => (
+  <section id={id} className={`bg-white p-5 sm:p-6 rounded-lg shadow-sm border border-gray-200 scroll-mt-24 ${wide ? 'md:col-span-2' : ''}`}>
     <h3 className="text-lg font-bold text-[#1a365d] mb-4 border-b pb-2">{title}</h3>
     <div className="space-y-4">{children}</div>
   </section>

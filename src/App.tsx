@@ -12,7 +12,8 @@ import { DataTable } from './components/DataTable';
 import { Settings } from './components/Settings';
 import { QuickAdjust } from './components/QuickAdjust';
 import { Guide } from './components/Guide';
-import { LayoutDashboard, PieChart, Layers, LineChart as LineChartIcon, Settings as SettingsIcon, TableProperties, Menu, X, ChevronRight, Sliders, BookOpen, Download, Upload, RotateCcw } from 'lucide-react';
+import { formulaById, systemOf } from './formulas';
+import { LayoutDashboard, PieChart, Layers, LineChart as LineChartIcon, Settings as SettingsIcon, TableProperties, Menu, X, ChevronRight, ChevronDown, Sliders, BookOpen, Download, Upload, RotateCcw } from 'lucide-react';
 import { clsx, type ClassValue } from 'clsx';
 import { twMerge } from 'tailwind-merge';
 
@@ -58,6 +59,11 @@ function App() {
 
   const toggleSidebar = () => setIsSidebarOpen(!isSidebarOpen);
   const goTo = (tab: Tab) => { setActiveTab(tab); setIsSidebarOpen(false); };
+  // Open Your Numbers at the pension setup (the header chip and the sample banner)
+  const goToPension = () => {
+    goTo('settings');
+    setTimeout(() => document.getElementById('pension-setup')?.scrollIntoView({ behavior: 'smooth', block: 'start' }), 60);
+  };
 
   // Esc closes whichever slide-out panel is open
   useEffect(() => {
@@ -109,6 +115,9 @@ function App() {
   };
 
   const totalAssets = effectiveConfig.starting403b + effectiveConfig.startingRoth + effectiveConfig.startingCash;
+  const formula = formulaById(config.pensionFormulaId);
+  const system = systemOf(formula);
+  const formulaLabel = system === 'CalSTRS' ? formula.name : `${formula.category} ${formula.name}`;
 
   return (
     <div className="flex h-screen bg-[#f8fafc] font-sans text-slate-900 overflow-hidden">
@@ -191,21 +200,34 @@ function App() {
       {/* Main Content Area */}
       <div className="flex-1 flex flex-col min-w-0 relative h-full">
         {/* Header */}
-        <header className="h-16 sm:h-20 bg-white/80 backdrop-blur-md border-b border-slate-200 px-4 lg:px-10 flex items-center justify-between sticky top-0 z-30">
-          <div className="flex items-center gap-3 min-w-0">
+        <header className="h-16 sm:h-20 bg-white border-b-4 border-[#0072B2] shadow-sm px-3 sm:px-4 lg:px-10 flex items-center justify-between gap-2 sticky top-0 z-30">
+          <div className="flex items-center gap-2 sm:gap-3 min-w-0">
             <button
               onClick={toggleSidebar}
               aria-label="Open menu"
-              className="p-2 hover:bg-slate-100 rounded-lg text-slate-600"
+              className="p-2 hover:bg-slate-100 rounded-lg text-slate-600 shrink-0"
             >
               <Menu size={24} />
             </button>
-            <h2 className="text-lg sm:text-xl font-bold text-slate-800 tracking-tight truncate">
-              {navItems.find(n => n.id === activeTab)?.label}
-            </h2>
+            <div className="min-w-0">
+              <h1 className="text-base sm:text-xl font-extrabold text-[#15325b] tracking-tight leading-tight truncate">
+                <span className="hidden md:inline">CalPERS &amp; CalSTRS </span>Retirement Planner
+              </h1>
+              <p className="text-xs sm:text-sm text-slate-500 leading-tight truncate">
+                <span className="md:hidden">CalPERS · CalSTRS · </span>{navItems.find(n => n.id === activeTab)?.label} · {config.planName || 'My Plan'}
+              </p>
+            </div>
           </div>
 
-          <div className="flex items-center gap-3">
+          <div className="flex items-center gap-2 sm:gap-3 shrink-0">
+            <button
+              onClick={goToPension}
+              title="Change your pension system and formula"
+              className="flex items-center gap-1.5 text-xs font-bold px-3 py-2 rounded-full border border-[#0072B2]/30 bg-[#0072B2]/10 text-[#0072B2] hover:bg-[#0072B2]/15 transition-colors max-w-[9rem] sm:max-w-none"
+            >
+              <span className="truncate">{system}<span className="hidden lg:inline"> · {formulaLabel}</span></span>
+              <ChevronDown size={14} className="shrink-0" />
+            </button>
             <div className="hidden sm:flex items-center gap-2 text-xs font-bold px-4 py-2 bg-slate-100 text-slate-600 rounded-full border border-slate-200">
               <span className={cn("w-2 h-2 rounded-full", isSample ? 'bg-amber-500' : 'bg-emerald-500')}></span>
               {isSample ? 'SAMPLE NUMBERS' : 'SAVED IN THIS BROWSER'}
@@ -234,9 +256,9 @@ function App() {
 
             {isSample && (
               <div className="rounded-lg border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-900 flex flex-col sm:flex-row sm:items-center gap-3 sm:justify-between">
-                <span>You're looking at a <b>made-up sample household</b>. Put in your own numbers to see your plan.</span>
+                <span>You're looking at a <b>made-up sample household</b> on CalPERS. Start with <b>Your Numbers</b>: pick CalPERS or CalSTRS first, then put in your own figures.</span>
                 <div className="flex gap-2 shrink-0">
-                  <button onClick={() => goTo('settings')} className="bg-amber-600 hover:bg-amber-700 text-white font-semibold px-3 py-1.5 rounded-lg">Enter my numbers</button>
+                  <button onClick={goToPension} className="bg-amber-600 hover:bg-amber-700 text-white font-semibold px-3 py-1.5 rounded-lg">Enter my numbers</button>
                   <button onClick={onOpenFile} className="border border-amber-300 hover:bg-amber-100 font-semibold px-3 py-1.5 rounded-lg">Open a saved plan</button>
                 </div>
               </div>
