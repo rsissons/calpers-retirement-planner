@@ -61,7 +61,10 @@ report.cardTitle = await evaluate(`document.querySelector('#pension-setup h3').i
 report.chip = await evaluate(`[...document.querySelectorAll('header button')].map(b => b.innerText).join(' | ')`);
 report.noSideScrollAfter = await evaluate('document.documentElement.scrollWidth <= window.innerWidth');
 await shot('calstrs');
-report.clickedGuide = await clickText('Guide', 'aside button');
+report.clickedGuide = await evaluate(`(() => { const b = document.querySelector('header button[aria-label="Guide"]'); if (!b) return false; b.click(); return true; })()`);
+await sleep(400);
+report.guideOpen = await evaluate(`[...document.querySelectorAll('h3')].some(h => h.textContent === 'What to gather')`);
+report.headerFits = await evaluate(`(() => { const h = document.querySelector('header'); return h.scrollWidth <= h.clientWidth; })()`);
 await sleep(400);
 await evaluate(`[...document.querySelectorAll('h3')].find(h => h.textContent === 'What to gather')?.scrollIntoView()`);
 await sleep(300);

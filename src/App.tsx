@@ -13,7 +13,7 @@ import { Settings } from './components/Settings';
 import { QuickAdjust } from './components/QuickAdjust';
 import { Guide } from './components/Guide';
 import { formulaById, systemOf } from './formulas';
-import { LayoutDashboard, PieChart, Layers, LineChart as LineChartIcon, Settings as SettingsIcon, TableProperties, Menu, X, ChevronRight, ChevronDown, Sliders, BookOpen, Download, Upload, RotateCcw } from 'lucide-react';
+import { LayoutDashboard, PieChart, Layers, LineChart as LineChartIcon, Settings as SettingsIcon, TableProperties, Menu, X, ChevronRight, Pencil, Sliders, BookOpen, Download, Upload, RotateCcw } from 'lucide-react';
 import { clsx, type ClassValue } from 'clsx';
 import { twMerge } from 'tailwind-merge';
 
@@ -200,17 +200,17 @@ function App() {
       {/* Main Content Area */}
       <div className="flex-1 flex flex-col min-w-0 relative h-full">
         {/* Header */}
-        <header className="h-16 sm:h-20 bg-white border-b-4 border-[#0072B2] shadow-sm px-3 sm:px-4 lg:px-10 flex items-center justify-between gap-2 sticky top-0 z-30">
-          <div className="flex items-center gap-2 sm:gap-3 min-w-0">
+        <header className="h-16 sm:h-20 bg-white border-b-4 border-[#0072B2] shadow-sm px-2 sm:px-4 lg:px-10 flex items-center justify-between gap-1.5 sm:gap-2 sticky top-0 z-30">
+          <div className="flex items-center gap-1 sm:gap-3 min-w-0">
             <button
               onClick={toggleSidebar}
               aria-label="Open menu"
-              className="p-2 hover:bg-slate-100 rounded-lg text-slate-600 shrink-0"
+              className="p-1.5 sm:p-2 hover:bg-slate-100 rounded-lg text-slate-600 shrink-0"
             >
               <Menu size={24} />
             </button>
             <div className="min-w-0">
-              <h1 className="text-base sm:text-xl font-extrabold text-[#15325b] tracking-tight leading-tight truncate">
+              <h1 className="text-[15px] sm:text-xl font-extrabold text-[#15325b] tracking-tight leading-tight line-clamp-2 sm:truncate">
                 <span className="hidden md:inline">CalPERS &amp; CalSTRS </span>Retirement Planner
               </h1>
               <p className="text-xs sm:text-sm text-slate-500 leading-tight truncate">
@@ -219,23 +219,35 @@ function App() {
             </div>
           </div>
 
-          <div className="flex items-center gap-2 sm:gap-3 shrink-0">
+          <div className="flex items-center gap-1 sm:gap-3 shrink-0">
             <button
               onClick={goToPension}
-              title="Change your pension system and formula"
-              className="flex items-center gap-1.5 text-xs font-bold px-3 py-2 rounded-full border border-[#0072B2]/30 bg-[#0072B2]/10 text-[#0072B2] hover:bg-[#0072B2]/15 transition-colors max-w-[9rem] sm:max-w-none"
+              title="Change your pension system and formula (opens the pension setup)"
+              aria-label={`Pension: ${system} ${formulaLabel}. Change it in the pension setup`}
+              className="flex items-center gap-1.5 text-xs font-bold px-2.5 sm:px-3 py-2 rounded-full border border-[#0072B2]/30 bg-[#0072B2]/10 text-[#0072B2] hover:bg-[#0072B2]/15 transition-colors max-w-[9rem] sm:max-w-none"
             >
               <span className="truncate">{system}<span className="hidden lg:inline"> · {formulaLabel}</span></span>
-              <ChevronDown size={14} className="shrink-0" />
+              <Pencil size={13} className="shrink-0" />
+              <span className="hidden sm:inline font-semibold">Change</span>
             </button>
             <div className="hidden sm:flex items-center gap-2 text-xs font-bold px-4 py-2 bg-slate-100 text-slate-600 rounded-full border border-slate-200">
               <span className={cn("w-2 h-2 rounded-full", isSample ? 'bg-amber-500' : 'bg-emerald-500')}></span>
               {isSample ? 'SAMPLE NUMBERS' : 'SAVED IN THIS BROWSER'}
             </div>
             <button
+              onClick={() => goTo('guide')}
+              aria-label="Guide"
+              title="Guide: how to use the planner and what to gather"
+              className={cn("flex items-center gap-1.5 p-1.5 sm:p-2 sm:px-3 rounded-xl text-sm font-semibold transition-colors",
+                activeTab === 'guide' ? 'bg-[#0072B2]/10 text-[#0072B2]' : 'text-slate-600 hover:bg-slate-100')}
+            >
+              <BookOpen size={20} />
+              <span className="hidden sm:inline">Guide</span>
+            </button>
+            <button
               onClick={() => setIsSettingsPanelOpen(true)}
               aria-label="Quick Adjust"
-              className="p-2 hover:bg-slate-100 rounded-xl text-slate-600 transition-colors"
+              className="p-1.5 sm:p-2 hover:bg-slate-100 rounded-xl text-slate-600 transition-colors"
             >
               <Sliders size={20} />
             </button>

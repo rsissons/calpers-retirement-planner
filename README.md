@@ -37,7 +37,7 @@ It isn't built for other states' taxes or other pension systems. A spouse's pens
 
 **Or download it** to use offline:
 
-1. Download `CalPERS-Retirement-Planner-1.3.1.html` from the [latest release](https://github.com/rsissons/calpers-retirement-planner/releases/latest) and save it anywhere, like your Documents folder.
+1. Download `CalPERS-Retirement-Planner-1.3.2.html` from the [latest release](https://github.com/rsissons/calpers-retirement-planner/releases/latest) and save it anywhere, like your Documents folder.
 2. Double-click it. It opens in your browser.
 3. It opens on the **Guide** with a made-up sample household loaded. Click **Enter my numbers** and replace the sample figures with yours.
 4. Your numbers save automatically in that browser. Use **Save to file** in the menu (☰) to keep a backup you can move to another computer or browser.
