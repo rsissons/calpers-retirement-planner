@@ -108,7 +108,7 @@ These go stale and should be checked each year:
 - **Sample health premiums** in `src/config.ts`: CalPERS health rates.
 - **Benefit factors** in `src/formulas.ts`: these rarely change, but re-check them against the [CalPERS charts](https://www.calpers.ca.gov/members/retirement-benefits/benefit-factor-charts) (and the CalSTRS tables against the CalSTRS Member Handbook) if CalPERS revises them.
 
-After any change, run `npm test` and `npm run build:single`. Then `npm run publish:pages` updates the online version (it runs the checks, builds, and pushes `dist/` to the `gh-pages` branch), and the new single file goes on a GitHub release.
+After any change, run `npm test` and `npm run build:single`. For screen changes, `npm run ui-check -- <file:// path to the release file> <screenshot prefix> 390 844` clicks through the app in headless Chrome at a true phone width (set `CHROME` if Chrome isn't in the default Windows location). Then `npm run publish:pages` updates the online version (it runs the checks, builds, and pushes `dist/` to the `gh-pages` branch), and the new single file goes on a GitHub release.
 
 ## License
 
