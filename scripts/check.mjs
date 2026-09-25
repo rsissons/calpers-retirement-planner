@@ -53,6 +53,49 @@ ok(Math.abs(pe2.ageFactor - 0.025) < 1e-9, `PEPRA at 67 factor ${pe2.ageFactor}`
 // RMD ages
 ok(rmdStartAge('1960-01-01') === 75 && rmdStartAge('1955-06-01') === 73, 'RMD start ages');
 
+// CalSTRS: monthly factors at the age on the last day of the retirement month, career factor, early retirement
+const strs = (id, birth, retire, years, over = {}) => calculatePension({ ...S, pensionFormulaId: id, yourBirthDate: birth, yourRetirementDate: retire, serviceCreditYears: years, serviceCreditAsOf: retire, finalCompensation: 10000, beneficiaryOptionFactor: 1, ...over });
+const near = (a, b) => Math.abs(a - b) < 1e-9;
+ok(FORMULAS.filter(f => f.category === 'CalSTRS').every(f => f.table.every(r => r.factors.length === 12)), 'CalSTRS tables have 12 monthly columns');
+ok(near(strs('calstrs-2-at-60', '1970-01-15', '2029-06-10', 25).ageFactor, 0.0193), '2% at 60, age 59y5m = 1.930%');
+const eom = strs('calstrs-2-at-60', '1970-06-20', '2030-06-05', 25);
+ok(eom.ageYears === 60 && eom.ageMonths === 0 && near(eom.ageFactor, 0.02), 'CalSTRS age is taken at the end of the month (59y11m on the 5th → 60y0m)');
+ok(near(strs('calstrs-2-at-62', '1966-01-01', '2030-10-01', 25).ageFactor, 0.02367), '2% at 62, age 64y9m = 2.367%');
+ok(near(strs('calstrs-2-at-62', '1970-01-01', '2070-01-01', 25).ageFactor, 0.024), '2% at 62, past 65 = 2.4% max');
+ok(!strs('calstrs-2-at-62', '1975-12-15', '2030-11-10', 25).eligible, '2% at 62 under 55 is ineligible');
+ok(!strs('calstrs-2-at-60', '1978-01-01', '2030-01-10', 25).eligible, '2% at 60 at 52 with 25 years is ineligible');
+const early = strs('calstrs-2-at-60', '1978-01-01', '2030-01-10', 30);
+ok(early.eligible && near(early.ageFactor, 0.0142), `2% at 60 at 52 with 30 years: 1.22% + 0.2% career = ${(early.ageFactor * 100).toFixed(3)}%`);
+ok(near(strs('calstrs-2-at-60', '1969-01-01', '2030-04-10', 30).ageFactor, 0.02367), 'career factor: 61y3m with 30 years = 2.367%');
+ok(near(strs('calstrs-2-at-60', '1969-01-01', '2030-07-10', 30).ageFactor, 0.024), 'career factor: 61y6m with 30 years caps at 2.4%');
+ok(near(strs('calstrs-2-at-60', '1969-01-01', '2030-04-10', 29.9).ageFactor, 0.02167), 'no career factor under 30 years');
+// CalSTRS COLA: simple 2% of the starting benefit, first on the Sept 1 after the first anniversary
+const sc = run({ hasSpouse: false, pensionFormulaId: 'calstrs-2-at-60', yourRetirementDate: '2030-06-30' });
+const scm = sc.yearly.flatMap(y => y.months);
+const p0 = scm[0].pension; // Jul 2030
+const at2 = (y, m) => scm[(y - 2030) * 12 + (m - 7)].pension;
+ok(near(at2(2031, 8), p0) && near(at2(2031, 9), p0 * 1.02) && near(at2(2032, 9), p0 * 1.04) && near(at2(2040, 9), p0 * 1.2), 'CalSTRS COLA: +2% of the start each Sept 1 from 2031, not compounded');
+const sc2 = run({ hasSpouse: false, pensionFormulaId: 'calstrs-2-at-60', yourRetirementDate: '2030-09-30' }).yearly.flatMap(y => y.months);
+ok(near(sc2[11].pension, sc2[0].pension) && near(sc2[23].pension, sc2[0].pension * 1.02), 'retiring on or after Sept 1: first COLA the Sept 1 two years on');
+// CalSTRS work rules: pay in the 180-day window comes off the pension; after it, pay over the fiscal-year
+// limit ($59,565 for 2026-27, indexed) is withheld until collected
+const wk = run({ hasSpouse: false, pensionFormulaId: 'calstrs-2-at-60', yourRetirementDate: '2030-06-30', jobPay: 8000, jobEndAge: 70, jobAtPensionEmployer: true });
+const wm = wk.yearly.flatMap(y => y.months);
+const gross = m => m.pension + m.pensionHeld;
+ok(wm.slice(0, 6).every(m => near(m.pensionHeld, Math.min(gross(m), 8000))) && wm[6].pensionHeld === 0, '180-day window (Jul–Dec 2030): pay comes off the pension');
+ok(wm.slice(6, 12).every(m => m.pensionHeld === 0), 'FY 2030-31 after the window: $48K under the limit, nothing held');
+// FY 2031-32 on: $96K a year; the limit is passed in the 9th month (Mar 2032: $72K > $65,764), and every
+// fiscal year's excess is collected in full from later checks, even past June
+const fyExcess = fy => Math.max(0, 96000 - 59565 * 1.02 ** (fy - 2026));
+const heldAfter = wm.slice(6).reduce((a, m) => a + m.pensionHeld, 0);
+const owedAll = [2031, 2032, 2033, 2034, 2035, 2036, 2037].reduce((a, fy) => a + fyExcess(fy), 0); // job ends Jun 2038 (age 70)
+ok(wm.slice(12, 20).every(m => m.pensionHeld === 0) && wm[20].pensionHeld > 0, 'FY 2031-32: withholding starts in Mar 2032, when pay passes the limit');
+ok(Math.abs(heldAfter - owedAll) < 0.01, `excess over the limit collected in full: ${heldAfter.toFixed(2)} = ${owedAll.toFixed(2)}`);
+ok(wm.every(m => m.pension >= -1e-9), 'never holds back more than the pension');
+const off = run({ hasSpouse: false, pensionFormulaId: 'calstrs-2-at-60', yourRetirementDate: '2030-06-30', jobPay: 8000, jobEndAge: 70 });
+ok(off.yearly.every(y => y.totalPensionHeld === 0), 'job outside CA public schools: pension untouched');
+const perJob = run({ hasSpouse: false, yourRetirementDate: '2030-06-30', jobPay: 8000, jobEndAge: 70, jobAtPensionEmployer: true }).yearly.flatMap(y => y.months);
+ok(perJob.slice(0, 6).every(m => m.jobPay === 0) && perJob[6].jobPay === 8000 && perJob.every(m => m.pensionHeld === 0), 'CalPERS retired annuitant: job starts after the 180-day wait, pension untouched');
 // Plan files: round trip, old/partial files, junk
 ok(JSON.stringify(toConfig({ format: 'calpers-retirement-planner', version: 1, plan: S })) === JSON.stringify(S), 'file round trip');
 const partial = toConfig({ yourBirthDate: '1970-01-01', yourRetirementDate: '2031-01-01', current403b: 'oops', debts: [{ name: 'X', payment: '100', endDate: '2033-01-01' }], pensionFormulaId: 'nope' });

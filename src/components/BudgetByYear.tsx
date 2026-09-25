@@ -3,6 +3,7 @@ import type { FC } from 'react';
 import type { Config } from '../config';
 import type { ProjectionResult } from '../projection';
 import { firstOfMonthAfter } from '../calpers';
+import { formulaById, systemOf } from '../formulas';
 import { ChevronLeft, ChevronRight } from 'lucide-react';
 
 interface Props { config: Config; projection: ProjectionResult; }
@@ -36,7 +37,7 @@ export const BudgetByYear: FC<Props> = ({ config, projection }) => {
   const conversionTax = mo(y.totalConversionTaxes + y.totalRmdTaxes);
 
   const rows = [
-    { label: 'CalPERS Pension', val: mo(y.totalPension), color: C.blue },
+    { label: `${systemOf(formulaById(config.pensionFormulaId))} Pension`, val: mo(y.totalPension), color: C.blue },
     { label: `${partner}'s Pension`, val: mo(y.totalSpousePension), color: C.blue },
     { label: `${partner}'s ${config.spousePayIsGross ? 'Pay (gross)' : 'Take-Home Pay'}`, val: mo(y.totalSpouseSalary), color: C.sky },
     { label: `${you}'s Job (gross)`, val: mo(y.totalJobPay), color: C.sky },

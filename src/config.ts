@@ -58,6 +58,7 @@ export interface Config {
 
   jobPay: number;                 // Your monthly GROSS pay from a job after retiring (0 = none)
   jobEndAge: number;              // Works from the month after retirement until this age
+  jobAtPensionEmployer: boolean;  // The job is with your pension system's employers (CalPERS agency / CA public school)
 
   essentialSpending: number;
   discretionarySpending: number;
@@ -142,6 +143,7 @@ export const sampleConfig: Config = {
 
   jobPay: 0,
   jobEndAge: 65,
+  jobAtPensionEmployer: false,
 
   essentialSpending: 5200,
   discretionarySpending: 1800,

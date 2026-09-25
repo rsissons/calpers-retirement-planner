@@ -135,7 +135,7 @@ function App() {
             </div>
             <div className="min-w-0">
               <h1 className="text-lg font-bold text-white tracking-tight leading-tight truncate">{config.planName || 'My Plan'}</h1>
-              <p className="text-[10px] text-blue-400 font-bold uppercase tracking-widest mt-1">CalPERS Retirement Planner</p>
+              <p className="text-[10px] text-blue-400 font-bold uppercase tracking-widest mt-1">CalPERS & CalSTRS Retirement Planner</p>
             </div>
           </div>
 
@@ -251,7 +251,7 @@ function App() {
             {activeTab === 'guide' && <Guide />}
 
             <footer className="pt-6 pb-2 text-center text-[11px] text-slate-400">
-              A planning tool, not financial advice. Confirm your pension with CalPERS. Your numbers never leave this device.
+              A planning tool, not financial advice. Confirm your pension with CalPERS or CalSTRS. Your numbers never leave this device.
             </footer>
           </div>
         </main>

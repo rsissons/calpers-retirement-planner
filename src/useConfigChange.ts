@@ -5,7 +5,7 @@ import { dateAtAge } from './calpers';
 const DATE_FIELDS = ['yourRetirementDate', 'spouseRetirementDate', 'yourBirthDate', 'spouseBirthDate', 'serviceCreditAsOf', 'current403bAsOf', 'savingsAsOf'];
 const PERCENT_FIELDS = ['annualReturn', 'spendingInflation', 'pensionCOLA', 'effectiveTaxRate', 'healthcareInflation', 'beneficiaryOptionFactor', 'savingsRate'];
 const TEXT_FIELDS = ['planName', 'yourName', 'spouseName', 'pensionFormulaId'];
-const CHECKBOX_FIELDS = ['pensionFromFormula', 'taxFromBrackets', 'bankSurplus', 'hasSpouse', 'spousePayIsGross'];
+const CHECKBOX_FIELDS = ['pensionFromFormula', 'taxFromBrackets', 'bankSurplus', 'hasSpouse', 'spousePayIsGross', 'jobAtPensionEmployer'];
 
 // Shared input handler for Settings and Quick Adjust: inputs are named after Config fields.
 // Percent sliders are stored as decimals; the retirement age slider moves the retirement date.

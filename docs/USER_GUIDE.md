@@ -1,6 +1,6 @@
 # User Guide
 
-How to fill in the CalPERS Retirement Planner, where each number comes from, and how to read what it tells you.
+How to fill in the CalPERS & CalSTRS Retirement Planner, where each number comes from, and how to read what it tells you.
 
 All money is **monthly** unless the label says otherwise. Every change applies instantly.
 
@@ -10,13 +10,13 @@ All money is **monthly** unless the label says otherwise. Every change applies i
 
 | Item | Where to find it | Used for |
 |---|---|---|
-| Retirement formula (for example "School 2% at 55" or "Local Miscellaneous 2% at 62") | CalPERS Annual Member Statement; myCalPERS | The pension |
-| Service credit, and the date it's as of | Annual Member Statement; myCalPERS | The pension |
-| A myCalPERS retirement estimate for your planned date | myCalPERS, Retirement Estimate Calculator | Final compensation, beneficiary option factor, and checking the planner's pension |
+| Retirement formula (for example "School 2% at 55", "Local Miscellaneous 2% at 62" or "CalSTRS 2% at 60") | CalPERS Annual Member Statement or myCalPERS; CalSTRS Retirement Progress Report in myCalSTRS | The pension |
+| Service credit, and the date it's as of | The same statement | The pension |
+| A retirement estimate for your planned date | myCalPERS Retirement Estimate Calculator, or a myCalSTRS estimate | Final compensation, beneficiary option factor, and checking the planner's pension |
 | Social Security estimate at the age you plan to start | ssa.gov/myaccount | Income |
 | 403(b), 457(b), Roth IRA and savings balances, with dates | Latest statements | Savings |
 | Monthly retirement contributions | Paystub | Savings growth until you retire |
-| Retiree health premiums for your plan and region | CalPERS health rates (search "CalPERS health plan rates") | Healthcare costs |
+| Retiree health premiums for your plan and region | CalPERS health rates (search "CalPERS health plan rates"), or your school district's retiree plan | Healthcare costs |
 | Your employer's contribution toward retiree health | HR, benefits office, or your bargaining unit's MOU | Healthcare costs |
 | Monthly spending, and each loan's payment and payoff date | Bank and card statements, loan statements | Expenses |
 
@@ -52,18 +52,29 @@ For a job you'd take after retiring, full-time or part-time. Leave the pay at 0 
 - **Job pay:** gross monthly pay, before tax. It starts the month after your retirement date. It's taxed on top of your pension, plus FICA and California SDI, so with a pension already in place a good share of each extra dollar goes to tax.
 - **Work until age:** the pay stops in the month you reach this age.
 - **Social Security earnings test:** if you draw Social Security before full retirement age (67 for anyone born 1960 or later), $1 is held back for every $2 you earn over $24,480 a year (2026). In the year you reach full retirement age it's $1 for every $3 over $65,160. The planner takes that out of your checks. SSA pays it back later by raising your benefit, but the planner doesn't count that, so it's slightly cautious.
-- **Going back to a CalPERS employer:** as a retired annuitant you must wait 180 days after retiring, and you can work at most 960 hours per fiscal year (July to June) across all CalPERS employers. A private-sector job doesn't affect your pension.
+- **"This job is with a CalPERS employer" / "in a California public school"** (the box's wording follows your formula). Leave it off for private-sector work, which doesn't affect the pension. Turn it on to apply your system's rules:
+  - **CalPERS (retired annuitant):** the job starts after the required 180-day wait. You can also work at most 960 hours per fiscal year (July to June) across all CalPERS employers. That limit isn't modeled, so keep the pay realistic for 960 hours.
+  - **CalSTRS (California public schools, including substitute teaching):** pay in the first 180 days after retiring comes off your pension dollar for dollar. After that, pay over the yearly earnings limit is withheld from your pension until it's collected. The limit is $59,565 for July 2026 to June 2027; it was $80,245 the year before, under a temporary law that ended.
 
-### CalPERS Pension
+### Your Pension (CalPERS or CalSTRS)
 
-- **Retirement formula:** pick yours from the list. It's printed on your Annual Member Statement. Classic members hired before 2013 usually have a "2% at 55"-style formula; PEPRA members hired in 2013 or later usually have "2% at 62" (miscellaneous) or "2%/2.5%/2.7% at 57" (safety).
-- **Calculate the pension from the formula:** on by default. Switch it off to type in the monthly amount straight from a myCalPERS estimate.
-- **Final compensation:** your monthly final compensation. For classic members it's usually your highest 12 consecutive months of pay (some employers use 36). For PEPRA members it's your highest 36 months, and it's subject to the PEPRA pensionable pay limit. A myCalPERS estimate shows the figure CalPERS used.
+- **Retirement formula:** pick yours from the list.
+  - **CalPERS:** it's printed on your Annual Member Statement. Classic members hired before 2013 usually have a "2% at 55"-style formula; PEPRA members hired in 2013 or later usually have "2% at 62" (miscellaneous) or "2%/2.5%/2.7% at 57" (safety).
+  - **CalSTRS:** "2% at 60" if you were first hired into CalSTRS-covered work before 2013, "2% at 62" after. It's on your Retirement Progress Report. The page's labels, hints and COLA rules switch to CalSTRS when you pick one.
+- **Calculate the pension from the formula:** on by default. Switch it off to type in the monthly amount straight from a myCalPERS or myCalSTRS estimate.
+- **Final compensation:** your monthly final compensation.
+  - **CalPERS classic:** usually your highest 12 consecutive months of pay (some employers use 36).
+  - **CalPERS PEPRA:** your highest 36 months, subject to the PEPRA pensionable pay limit.
+  - **CalSTRS:** your highest 36 consecutive months. 2% at 60 members with 25 or more years of service use their highest 12 months. 2% at 62 is subject to the PEPRA limit.
+  - A retirement estimate shows the figure the system used.
 - **Service credit and "as of" date:** from your statement. The planner adds 1/12 of a year for each month you work between that date and retirement, assuming full-time work.
-- **Beneficiary option factor:** the planner starts from the *unmodified* allowance, then multiplies by this factor for the option you'll choose. To get it, run a myCalPERS estimate and divide your option's monthly amount by the unmodified amount. For example, $4,650 ÷ $5,000 = 93%. Use 100% if you'll take the unmodified allowance (no survivor benefit).
-- **Pension COLA:** most CalPERS contracts have a 2% cost-of-living adjustment; some employers contracted for more. The first COLA arrives May 1 of the second calendar year after you retire.
+- **Beneficiary option factor:** the planner starts from the *unmodified* allowance (CalSTRS calls it the Member-Only Benefit), then multiplies by this factor for the option you'll choose. To get it, run a retirement estimate and divide your option's monthly amount by the unmodified amount. For example, $4,650 ÷ $5,000 = 93%. Use 100% if you'll take the unmodified allowance (no survivor benefit).
+- **Pension COLA:**
+  - **CalPERS:** most contracts have a 2% cost-of-living adjustment, compounded; some employers contracted for more. The first COLA arrives May 1 of the second calendar year after you retire.
+  - **CalSTRS:** a 2% benefit adjustment of your *starting* benefit (simple, not compounded) every Sept 1 after the first anniversary of retiring. After 10 years that's +20%, where a compounded 2% would be about +22%.
+- **CalSTRS age factors** go up by the month, and they use your age on the last day of the month you retire. 2% at 60 members with 30 or more years of service get a 0.2% career factor, up to 2.4%. The table under the summary shows every factor, with yours highlighted.
 
-**Check it:** the summary box shows the age factor, the percentage of pay and the monthly amount. Compare it with a myCalPERS estimate for the same date. If they differ, trust CalPERS: adjust final compensation, or switch formula mode off and type in their number.
+**Check it:** the summary box shows the age factor, the percentage of pay and the monthly amount. Compare it with a myCalPERS or myCalSTRS estimate for the same date. If they differ, trust the system: adjust final compensation, or switch formula mode off and type in their number.
 
 ### Savings & Investments
 
@@ -122,14 +133,14 @@ A simple way to estimate spending: add up 12 months of bank and credit card stat
 
 **My numbers disappeared.** The browser's storage was cleared, you're in a private window, or you opened the planner in a different browser or from a different copy of the file. Use **Open file** with your saved plan.
 
-**The pension doesn't match my myCalPERS estimate.** Check the formula, the service credit date, and final compensation, which is usually the cause. PEPRA members may be subject to the pay limit, and some members have service under two formulas, which the planner doesn't split. When in doubt, switch formula mode off and enter the myCalPERS amount.
+**The pension doesn't match my myCalPERS or myCalSTRS estimate.** Check the formula, the service credit date, and final compensation, which is usually the cause. PEPRA members may be subject to the pay limit, and some members have service under two formulas, which the planner doesn't split. When in doubt, switch formula mode off and enter the myCalPERS amount.
 
-**It says I'm under the minimum retirement age.** Each formula has one (50 for most, 52 for PEPRA 2% at 62, and 55 for State 1.25% formulas). PEPRA members with prior classic service may retire at 50; if that's you, switch formula mode off and use your myCalPERS estimate.
+**It says I'm under the minimum retirement age.** Each formula has one (50 for most CalPERS formulas, 52 for PEPRA 2% at 62, 55 for State 1.25% formulas, and 55 for CalSTRS, or 50 with 30+ years under CalSTRS 2% at 60). PEPRA members with prior classic service may retire at 50; if that's you, switch formula mode off and use your estimate.
 
-**My formula isn't in the list.** The list covers every benefit factor chart CalPERS publishes. If yours is different (for example, a split between two formulas), use your myCalPERS estimate with formula mode off.
+**My formula isn't in the list.** The list covers every benefit factor chart CalPERS publishes and both CalSTRS formulas. If yours is different (for example, a split between two formulas), use your myCalPERS estimate with formula mode off.
 
 **It won't open on my iPhone or iPad.** Opening a saved HTML file from the Files app shows a preview, not a working page. Use the online version at https://rsissons.github.io/calpers-retirement-planner/ instead.
 
 ---
 
-*This planner is a planning tool, not financial, tax or legal advice. Confirm your pension with CalPERS before making retirement decisions, and consider talking to a fee-only fiduciary financial planner.*
+*This planner is a planning tool, not financial, tax or legal advice. Confirm your pension with CalPERS or CalSTRS before making retirement decisions, and consider talking to a fee-only fiduciary financial planner.*

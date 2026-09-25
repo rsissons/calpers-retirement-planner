@@ -57,6 +57,7 @@ export const QuickAdjust: FC<Props> = ({ config, setConfig }) => {
   const pension = calculatePension(config);
   const pensionAmount = config.pensionFromFormula ? pension.optionAmount : config.pensionStart;
   const partner = config.spouseName || 'Spouse';
+  const strs = pension.system === 'CalSTRS';
 
   return (
     <div className="space-y-8">
@@ -64,7 +65,7 @@ export const QuickAdjust: FC<Props> = ({ config, setConfig }) => {
         <DateField label="Your retirement date" name="yourRetirementDate" value={config.yourRetirementDate} onChange={onChange}
           hint={pension.eligible || !config.pensionFromFormula
             ? `Age ${pension.ageYears}y ${pension.ageMonths}m · pension ${$(pensionAmount)}/mo`
-            : `Under the minimum retirement age (${pension.formula.minAge}) for your formula`} />
+            : `Under the minimum retirement age for your formula`} />
         {config.hasSpouse && (
           <DateField label={`${partner}'s retirement date`} name="spouseRetirementDate" value={config.spouseRetirementDate} onChange={onChange}
             hint="Their pay ends and their pension starts" />
@@ -76,7 +77,9 @@ export const QuickAdjust: FC<Props> = ({ config, setConfig }) => {
       <Group title="Work after retirement">
         <Slider label="Job pay (gross)" name="jobPay" display={config.jobPay > 0 ? `${$(config.jobPay)}/mo` : 'None'}
           value={config.jobPay} min={0} max={rangeMax(config.jobPay, 20000, 1000)} step={100} onChange={onChange}
-          hint="Taxed on top of your pension, plus FICA and CA SDI. At a CalPERS employer: 180-day wait, max 960 hrs/yr." />
+          hint={`Taxed on top of your pension, plus FICA and CA SDI.${config.jobAtPensionEmployer
+            ? strs ? ' CA public school: the 180-day rule and earnings limit apply to your pension.' : ' CalPERS employer: starts after the 180-day wait.'
+            : ''}`} />
         <Slider label="Work until" name="jobEndAge" display={`Age ${config.jobEndAge}`}
           value={config.jobEndAge} min={50} max={80} step={1} onChange={onChange}
           hint={config.jobPay > 0 && config.jobEndAge > config.yourSSStartAge && config.yourSSStartAge < 67
@@ -109,7 +112,7 @@ export const QuickAdjust: FC<Props> = ({ config, setConfig }) => {
           hint="Premiums and Part B. A fixed employer contribution means increases are yours." />
       </Group>
 
-      <p className="text-xs text-slate-400 border-t border-slate-100 pt-4">Everything else, including your CalPERS formula, loans, balances and taxes, is on the Your Numbers tab.</p>
+      <p className="text-xs text-slate-400 border-t border-slate-100 pt-4">Everything else, including your pension formula, loans, balances and taxes, is on the Your Numbers tab.</p>
     </div>
   );
 };

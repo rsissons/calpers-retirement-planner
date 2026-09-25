@@ -21,7 +21,7 @@ export const Guide: FC = () => (
   <div className="p-0 sm:p-2 max-w-4xl mx-auto space-y-5">
     <Section title="How to use this planner">
       <ol className="list-decimal pl-5 space-y-1">
-        <li>Gather the numbers in the checklist below. Most come from myCalPERS and your Social Security statement.</li>
+        <li>Gather the numbers in the checklist below. Most come from myCalPERS or myCalSTRS and your Social Security statement.</li>
         <li>Open <b>Your Numbers</b> and replace the sample figures with yours. Changes apply instantly.</li>
         <li>Read the <b>Overview</b>: how long the money lasts, your first-month budget, and when savings run out.</li>
         <li>Try different retirement dates and spending levels in <b>Quick Adjust</b> (the sliders button, top right).</li>
@@ -36,13 +36,13 @@ export const Guide: FC = () => (
 
     <Section title="What to gather">
       <ul>
-        <Item what="Retirement formula" where={<>CalPERS Annual Member Statement, or myCalPERS (<a className="text-[#0072B2] underline" href="https://my.calpers.ca.gov" target="_blank" rel="noreferrer">my.calpers.ca.gov</a>).</>} />
-        <Item what="Service credit" where="Annual Member Statement or myCalPERS, with the date it's as of." />
-        <Item what="Final compensation" where="Your highest 12 (classic) or 36 (PEPRA) consecutive months of pay, monthly. A myCalPERS estimate shows the figure it used." />
-        <Item what="Beneficiary option factor" where="Run a myCalPERS estimate and divide your chosen option's amount by the unmodified amount. 100% if you'll take unmodified." />
+        <Item what="Retirement formula" where={<>CalPERS: Annual Member Statement, or myCalPERS (<a className="text-[#0072B2] underline" href="https://my.calpers.ca.gov" target="_blank" rel="noreferrer">my.calpers.ca.gov</a>). CalSTRS: 2% at 60 if first hired before 2013, 2% at 62 after; it's on your Retirement Progress Report in myCalSTRS (<a className="text-[#0072B2] underline" href="https://www.calstrs.com/mycalstrs" target="_blank" rel="noreferrer">calstrs.com/mycalstrs</a>).</>} />
+        <Item what="Service credit" where="CalPERS Annual Member Statement or myCalPERS; CalSTRS Retirement Progress Report. Note the date it's as of." />
+        <Item what="Final compensation" where="CalPERS: highest 12 (classic) or 36 (PEPRA) consecutive months of pay. CalSTRS: highest 36 months, or 12 with 25+ years under 2% at 60. Monthly. A retirement estimate shows the figure it used." />
+        <Item what="Beneficiary option factor" where="Run a myCalPERS or myCalSTRS estimate and divide your chosen option's amount by the unmodified amount (CalSTRS: the Member-Only Benefit). 100% if you'll take that." />
         <Item what="Social Security" where={<>Your statement at <a className="text-[#0072B2] underline" href="https://www.ssa.gov/myaccount/" target="_blank" rel="noreferrer">ssa.gov/myaccount</a>, at the age you plan to start.</>} />
         <Item what="403(b) / 457(b), Roth, savings" where="Your latest statements, with their dates." />
-        <Item what="Retiree health" where="CalPERS health plan rates for your region and plan, and your employer's retiree contribution (HR or your MOU)." />
+        <Item what="Retiree health" where="CalPERS health plan rates for your region and plan, or your school district's retiree plan (CalSTRS has none), and your employer's retiree contribution (HR or your MOU)." />
         <Item what="Spending" where="A year of bank and card statements, or a budgeting app. Split it into essential and discretionary; list loans separately." />
       </ul>
     </Section>
@@ -50,7 +50,8 @@ export const Guide: FC = () => (
     <Section title="What the model assumes">
       <ul className="list-disc pl-5 space-y-1">
         <li>Monthly simulation from the month after you retire through your chosen end age.</li>
-        <li>Pension from the CalPERS benefit factor chart for your formula × service × final compensation × option factor, capped where the chart says so. The first CalPERS COLA is May 1 of the second calendar year after retiring.</li>
+        <li>Pension from your formula's age factor chart × service × final compensation × option factor, capped where the chart says so.</li>
+        <li>CalPERS: quarter-year age factors; the COLA compounds, first on May 1 of the second calendar year after retiring. CalSTRS: monthly age factors at your age on the last day of the retirement month, the 0.2% career factor with 30+ years under 2% at 60, and a simple 2% of the starting benefit every Sept 1 after the first year.</li>
         <li>Shortfalls come from cash savings first, then the 403(b), then the Roth. Roth conversions (if any) run from the 403(b) until it's empty.</li>
         <li>Federal and California income tax from real brackets (2026 federal, 2025 California), joint or single, indexed at spending inflation. Up to 85% of Social Security is federally taxable; California doesn't tax it.</li>
         <li>Wages (your spouse's pay and any job you take after retiring) are entered gross. They're taxed with the pensions and also pay FICA and California SDI. Before full retirement age, Social Security is reduced by the earnings test.</li>
@@ -65,7 +66,7 @@ export const Guide: FC = () => (
         <li>No survivor scenario: both people are assumed alive for the whole plan.</li>
         <li>No IRMAA (higher Medicare premiums at high incomes), long-term care, or one-time big expenses.</li>
         <li>No taxes on savings interest, and Social Security held back by the earnings test isn't credited back after full retirement age (a little conservative).</li>
-        <li>Only CalPERS formulas and California taxes. It isn't built for CalSTRS members or other states.</li>
+        <li>Only CalPERS and CalSTRS Defined Benefit pensions and California taxes. No CalSTRS Defined Benefit Supplement (add its balance to savings), no purchasing-power top-ups, no other states.</li>
       </ul>
       <p className="pt-2 font-semibold text-gray-800">This is a planning tool, not financial, tax or legal advice. Confirm your pension with CalPERS before you make decisions, and consider a fee-only fiduciary planner.</p>
     </Section>

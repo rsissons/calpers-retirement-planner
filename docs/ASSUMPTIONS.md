@@ -16,7 +16,21 @@ Exactly how the planner calculates, so anyone can check it. The code references 
 - **Service credit** grows by 1/12 of a year for each month between the "as of" date and retirement (full-time work).
 - **Beneficiary option:** the unmodified amount is multiplied by the option factor you enter. The planner doesn't compute CalPERS's actuarial option factors; get yours from a myCalPERS estimate.
 - **COLA:** the first increase is May 1 of the second calendar year after retirement, then every May, at the rate you set (2% default).
+- **Working for a CalPERS employer after retiring** (when you tick the box, as a retired annuitant): the job starts after the 180-day wait and the pension isn't affected. The 960-hour-per-fiscal-year limit isn't modeled; keep the pay realistic for it.
 - **Not modeled:** split service under two formulas, reciprocal systems, the PEPRA pensionable compensation limit (enter final compensation that already reflects it), Social Security offsets to final compensation, purchased service, and sick leave conversion (add those to service credit yourself).
+
+## CalSTRS pension (`calpers.ts`, `formulas.ts`, `projection.ts`)
+
+- **Member-Only Benefit** = age factor × service credit × final compensation, then × the option factor you enter.
+- **Age factors** come from the CalSTRS Member Handbook 2026 age factor tables (pages 78-79), one factor per month of age, at your age on the **last day of the month** your retirement is effective.
+  - 2% at 60: 1.1% at 50 to 2.4% at 63. Minimum age 55, or 50 with 30 or more years of service.
+  - 2% at 62: 1.16% at 55 to 2.4% at 65. Minimum age 55.
+- **Career factor** (2% at 60 only): +0.2% with 30 or more years of service credit, up to a 2.4% total.
+- **Final compensation** is entered by you: 36 months, or 12 months for 2% at 60 members with 25+ years.
+- **Benefit adjustment (COLA):** a simple 2% of the starting benefit (the rate you set), first on the Sept 1 after the first anniversary of retiring (a retirement on or after Sept 1 waits until the Sept 1 two years later), then every Sept 1. Not compounded.
+- **Working in California public schools after retiring** (when you tick the box): pay in the first 180 days comes off the pension dollar for dollar. After that, pay beyond the fiscal-year (July-June) postretirement earnings limit is withheld from later checks until collected in full, up to one year's benefit per fiscal year. The limit is $59,565 for 2026-27, indexed at spending inflation after that. The narrow critical-need exemption isn't modeled.
+- **Social Security:** CalSTRS pay usually isn't covered by Social Security. Enter what you earned elsewhere, or 0. WEP and GPO no longer reduce benefits (Social Security Fairness Act, January 2025).
+- **Not modeled:** the Defined Benefit Supplement (add its balance to savings), Supplemental Benefit Maintenance Account purchasing-power payments, the one-time death benefit, and service credit purchases (add those to service credit yourself).
 
 ## Other income (`projection.ts`)
 
@@ -67,7 +81,9 @@ Exactly how the planner calculates, so anyone can check it. The code references 
 
 | What | Source |
 |---|---|
-| Benefit factors, minimum ages, caps (all 32 formulas) | CalPERS Benefit Factor Charts, https://www.calpers.ca.gov/members/retirement-benefits/benefit-factor-charts (downloaded September 24, 2026). Each formula links to its own chart in `formulas.ts` and in the app. |
+| CalSTRS age factors, minimum ages, career factor, final compensation, benefit adjustment, 180-day rule, earnings limit mechanics | CalSTRS Member Handbook 2026, https://www.calstrs.com/files/44f960e51/MemberHandbook2026.pdf |
+| CalSTRS postretirement earnings limit ($59,565 for 2026-27; $80,245 for 2025-26 under SB 765) | https://www.calstrs.com/limits |
+| Benefit factors, minimum ages, caps (all 32 CalPERS formulas) | CalPERS Benefit Factor Charts, https://www.calpers.ca.gov/members/retirement-benefits/benefit-factor-charts (downloaded September 24, 2026). Each formula links to its own chart in `formulas.ts` and in the app. |
 | Federal brackets, standard deductions, 65+ additional deduction (2026) | IRS Revenue Procedure 2025-32 |
 | Taxable Social Security base amounts ($25,000/$34,000 single; $32,000/$44,000 joint) | IRS Publication 915 |
 | California brackets (2025) | FTB 2025 California Tax Rate Schedules (Schedules X and Y) |

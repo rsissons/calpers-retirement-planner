@@ -1,19 +1,27 @@
-// CalPERS retirement formulas and their benefit (age) factors.
-// Generated from CalPERS's published benefit factor charts, one PDF per formula:
+// CalPERS and CalSTRS retirement formulas and their benefit (age) factors.
+// CalPERS: generated from CalPERS's published benefit factor charts, one PDF per formula:
 // https://www.calpers.ca.gov/members/retirement-benefits/benefit-factor-charts (downloaded 2026-09-24).
-// Each table row is [exact age, +¼ year, +½ year, +¾ year]; the last row applies at that age and older.
+// Each CalPERS row is [exact age, +¼ year, +½ year, +¾ year].
+// CalSTRS: parsed from the age factor tables in the CalSTRS Member Handbook 2026 (pages 78-79).
+// Each CalSTRS row has 12 factors, one per month of age (0-11).
+// In every table the last row applies at that age and older.
 // minAge is the chart's minimum retirement age; maxPercent is the chart's cap on the percentage of
 // final compensation (Safety formulas), or null when the chart states none.
 
 export interface PensionFormula {
   id: string;
-  category: 'School' | 'Local Miscellaneous' | 'State Miscellaneous & Industrial' | 'Local Safety' | 'State Safety';
+  category: 'School' | 'Local Miscellaneous' | 'State Miscellaneous & Industrial' | 'Local Safety' | 'State Safety' | 'CalSTRS';
   name: string;
   minAge: number;
   maxPercent: number | null;
-  table: { age: number; factors: [number, number, number, number] }[];
+  table: { age: number; factors: number[] }[];   // 4 (quarter-year) or 12 (monthly) factors per row
+  earlyRetirement?: { age: number; serviceYears: number };  // Younger than minAge allowed with this much service
+  careerFactor?: { serviceYears: number; add: number; max: number }; // Added to the age factor, up to max
   source: string;
 }
+
+export type PensionSystem = 'CalPERS' | 'CalSTRS';
+export const systemOf = (f: PensionFormula): PensionSystem => f.category === 'CalSTRS' ? 'CalSTRS' : 'CalPERS';
 
 export const FORMULAS: PensionFormula[] = [
   {
@@ -556,6 +564,47 @@ export const FORMULAS: PensionFormula[] = [
       { age: 55, factors: [0.03, 0.03, 0.03, 0.03] },
     ],
     source: 'https://www.calpers.ca.gov/documents/state-safety-member-3-at-55-benefit-factors-pdf/download?inline',
+  },
+  {
+    id: 'calstrs-2-at-60', category: 'CalSTRS', name: '2% at 60',
+    minAge: 55, maxPercent: null,
+    earlyRetirement: { age: 50, serviceYears: 30 },
+    careerFactor: { serviceYears: 30, add: 0.002, max: 0.024 },
+    table: [
+      { age: 50, factors: [0.011, 0.01105, 0.0111, 0.01115, 0.0112, 0.01125, 0.0113, 0.01135, 0.0114, 0.01145, 0.0115, 0.01155] },
+      { age: 51, factors: [0.0116, 0.01165, 0.0117, 0.01175, 0.0118, 0.01185, 0.0119, 0.01195, 0.012, 0.01205, 0.0121, 0.01215] },
+      { age: 52, factors: [0.0122, 0.01225, 0.0123, 0.01235, 0.0124, 0.01245, 0.0125, 0.01255, 0.0126, 0.01265, 0.0127, 0.01275] },
+      { age: 53, factors: [0.0128, 0.01285, 0.0129, 0.01295, 0.013, 0.01305, 0.0131, 0.01315, 0.0132, 0.01325, 0.0133, 0.01335] },
+      { age: 54, factors: [0.0134, 0.01345, 0.0135, 0.01355, 0.0136, 0.01365, 0.0137, 0.01375, 0.0138, 0.01385, 0.0139, 0.01395] },
+      { age: 55, factors: [0.014, 0.0141, 0.0142, 0.0143, 0.0144, 0.0145, 0.0146, 0.0147, 0.0148, 0.0149, 0.015, 0.0151] },
+      { age: 56, factors: [0.0152, 0.0153, 0.0154, 0.0155, 0.0156, 0.0157, 0.0158, 0.0159, 0.016, 0.0161, 0.0162, 0.0163] },
+      { age: 57, factors: [0.0164, 0.0165, 0.0166, 0.0167, 0.0168, 0.0169, 0.017, 0.0171, 0.0172, 0.0173, 0.0174, 0.0175] },
+      { age: 58, factors: [0.0176, 0.0177, 0.0178, 0.0179, 0.018, 0.0181, 0.0182, 0.0183, 0.0184, 0.0185, 0.0186, 0.0187] },
+      { age: 59, factors: [0.0188, 0.0189, 0.019, 0.0191, 0.0192, 0.0193, 0.0194, 0.0195, 0.0196, 0.0197, 0.0198, 0.0199] },
+      { age: 60, factors: [0.02, 0.02, 0.02, 0.02033, 0.02033, 0.02033, 0.02067, 0.02067, 0.02067, 0.021, 0.021, 0.021] },
+      { age: 61, factors: [0.02133, 0.02133, 0.02133, 0.02167, 0.02167, 0.02167, 0.022, 0.022, 0.022, 0.02233, 0.02233, 0.02233] },
+      { age: 62, factors: [0.02267, 0.02267, 0.02267, 0.023, 0.023, 0.023, 0.02333, 0.02333, 0.02333, 0.02367, 0.02367, 0.02367] },
+      { age: 63, factors: [0.024, 0.024, 0.024, 0.024, 0.024, 0.024, 0.024, 0.024, 0.024, 0.024, 0.024, 0.024] },
+    ],
+    source: 'https://www.calstrs.com/files/44f960e51/MemberHandbook2026.pdf',
+  },
+  {
+    id: 'calstrs-2-at-62', category: 'CalSTRS', name: '2% at 62',
+    minAge: 55, maxPercent: null,
+    table: [
+      { age: 55, factors: [0.0116, 0.0117, 0.0118, 0.0119, 0.012, 0.0121, 0.0122, 0.0123, 0.0124, 0.0125, 0.0126, 0.0127] },
+      { age: 56, factors: [0.0128, 0.0129, 0.013, 0.0131, 0.0132, 0.0133, 0.0134, 0.0135, 0.0136, 0.0137, 0.0138, 0.0139] },
+      { age: 57, factors: [0.014, 0.0141, 0.0142, 0.0143, 0.0144, 0.0145, 0.0146, 0.0147, 0.0148, 0.0149, 0.015, 0.0151] },
+      { age: 58, factors: [0.0152, 0.0153, 0.0154, 0.0155, 0.0156, 0.0157, 0.0158, 0.0159, 0.016, 0.0161, 0.0162, 0.0163] },
+      { age: 59, factors: [0.0164, 0.0165, 0.0166, 0.0167, 0.0168, 0.0169, 0.017, 0.0171, 0.0172, 0.0173, 0.0174, 0.0175] },
+      { age: 60, factors: [0.0176, 0.0177, 0.0178, 0.0179, 0.018, 0.0181, 0.0182, 0.0183, 0.0184, 0.0185, 0.0186, 0.0187] },
+      { age: 61, factors: [0.0188, 0.0189, 0.019, 0.0191, 0.0192, 0.0193, 0.0194, 0.0195, 0.0196, 0.0197, 0.0198, 0.0199] },
+      { age: 62, factors: [0.02, 0.02, 0.02, 0.02033, 0.02033, 0.02033, 0.02067, 0.02067, 0.02067, 0.021, 0.021, 0.021] },
+      { age: 63, factors: [0.02133, 0.02133, 0.02133, 0.02167, 0.02167, 0.02167, 0.022, 0.022, 0.022, 0.02233, 0.02233, 0.02233] },
+      { age: 64, factors: [0.02267, 0.02267, 0.02267, 0.023, 0.023, 0.023, 0.02333, 0.02333, 0.02333, 0.02367, 0.02367, 0.02367] },
+      { age: 65, factors: [0.024, 0.024, 0.024, 0.024, 0.024, 0.024, 0.024, 0.024, 0.024, 0.024, 0.024, 0.024] },
+    ],
+    source: 'https://www.calstrs.com/files/44f960e51/MemberHandbook2026.pdf',
   },
 ];
 

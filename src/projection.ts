@@ -1,5 +1,6 @@
 import type { Config } from './config';
 import { ageOn, firstOfMonthAfter, rmdStartAge } from './calpers';
+import { formulaById, systemOf } from './formulas';
 import { incomeTax, payrollTaxMonth, payrollScale, earningsTestHoldback, earningsTestMonthlyLimit, fullRetirementAge } from './tax';
 
 // Calendar month index (year*12 + month) for an ISO date
@@ -14,7 +15,8 @@ export interface MonthlyData {
   monthIndex: number; // 0-11
 
   // Income
-  pension: number;
+  pension: number;           // Paid this month (after any CalSTRS work-rule holdback)
+  pensionHeld: number;       // Held back by the CalSTRS 180-day rule or earnings limit
   spousePension: number;
   spouseSalary: number;
   jobPay: number;           // Your gross pay from a job after retiring
@@ -60,6 +62,7 @@ export interface YearlyData {
   yearIndex: number;
 
   totalPension: number;
+  totalPensionHeld: number;
   totalSpousePension: number;
   totalSpouseSalary: number;
   totalJobPay: number;
@@ -127,6 +130,21 @@ const UNIFORM_LIFETIME: Record<number, number> = {
 };
 const rmdDivisor = (age: number) => UNIFORM_LIFETIME[Math.min(age, 119)] ?? 2.0;
 
+// Working after retirement for the pension system's own employers (CalSTRS Member Handbook 2026;
+// CalSTRS.com/limits; CalPERS retired annuitant rules):
+// - Both: a 180-day separation after retiring. CalSTRS reduces the pension dollar for dollar by pay in
+//   that window; CalPERS doesn't allow retired-annuitant work in it, so the job starts after it.
+// - CalSTRS: after the window, pay over the fiscal-year (July-June) earnings limit is withheld from the
+//   pension. $59,565 for 2026-27 (the temporary SB 765 increase to $80,245 ended June 30, 2026), indexed.
+const SEPARATION_DAYS = 180;
+const CALSTRS_EARNINGS_LIMIT = 59_565;
+const CALSTRS_LIMIT_FY = 2026;   // Fiscal year starting July 2026
+
+const addDays = (iso: string, days: number) => {
+  const [y, m, d] = iso.split('-').map(Number);
+  return new Date(Date.UTC(y, m - 1, d + days)).toISOString().slice(0, 10);
+};
+
 // Helper used in note generation
 const formatNote = (value: number) =>
   new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD', maximumFractionDigits: 0 }).format(value);
@@ -146,8 +164,23 @@ export function calculateProjection(config: Config): ProjectionResult {
   const spouseFRA = fullRetirementAge(config.spouseBirthDate);
 
   // All config spending/income values are MONTHLY figures.
-  // CalPERS COLA: first on May 1 of the second calendar year after retiring, then every May.
-  const firstColaYear = Number(config.yourRetirementDate.slice(0, 4)) + 2;
+  // CalPERS COLA: compounding, first on May 1 of the second calendar year after retiring, then every May.
+  // CalSTRS: a simple (not compounded) % of the starting benefit, first on the Sept 1 after the first
+  // anniversary of retiring (a retirement before Sept 1 gets it the next Sept 1), then every Sept 1.
+  const system = systemOf(formulaById(config.pensionFormulaId));
+  const retireYear = Number(config.yourRetirementDate.slice(0, 4));
+  const colaMonth = system === 'CalSTRS' ? 9 : 5;
+  const firstColaYear = system === 'CalSTRS'
+    ? retireYear + (Number(config.yourRetirementDate.slice(5, 7)) < 9 ? 1 : 2)
+    : retireYear + 2;
+  const pensionWithCola = (count: number) => system === 'CalSTRS'
+    ? config.pensionStart * (1 + config.pensionCOLA * count)
+    : config.pensionStart * Math.pow(1 + config.pensionCOLA, count);
+  // Job with the pension system's employers: the 180-day window and the CalSTRS fiscal-year limit
+  const systemJob = config.jobAtPensionEmployer && config.jobPay > 0;
+  const separationEnds = addDays(config.yourRetirementDate, SEPARATION_DAYS);
+  // CalSTRS fiscal-year earnings, that year's excess over the limit, and excess not yet collected
+  const fyState = { fy: -1, earned: 0, excess: 0, owed: 0 };
   let currentSpouseSS = config.spouseSS;
   let currentYourSS = config.yourSS;
   let currentSpousePension = config.spousePension;
@@ -197,6 +230,7 @@ export function calculateProjection(config: Config): ProjectionResult {
       yearIndex: year,
       totalPension: 0,
       totalSpousePension: 0,
+      totalPensionHeld: 0,
       totalSpouseSalary: 0,
       totalJobPay: 0,
       totalSpouseSS: 0,
@@ -260,7 +294,32 @@ export function calculateProjection(config: Config): ProjectionResult {
       const count = held.filter(Boolean).length;
       return { held, perMonth: count > 0 ? Math.min(ss, earningsTestHoldback(wagesBeforeFRA, reachesFRA, payScale) / count) : 0 };
     };
-    const jobPayIn = monthDates.map(d => ageOn(config.yourBirthDate, d) < config.jobEndAge ? config.jobPay : 0);
+    const inSeparation = monthDates.map(d => d < separationEnds);
+    const jobPayIn = monthDates.map((d, m) => ageOn(config.yourBirthDate, d) < config.jobEndAge
+      && !(systemJob && system === 'CalPERS' && inSeparation[m]) ? config.jobPay : 0);
+
+    // The pension before and after any work-rule holdback (CalSTRS only). Pay in the 180-day window comes
+    // off that month's pension; after it, pay beyond the fiscal year's limit is withheld from the following
+    // checks until it's collected in full (even past June), up to a year's benefit per fiscal year.
+    const pensionGross = monthDates.map(d => pensionWithCola(Math.max(0,
+      Number(d.slice(0, 4)) - firstColaYear + (Number(d.slice(5, 7)) >= colaMonth ? 1 : 0))));
+    const pensionHeld = monthDates.map((d, m) => {
+      if (!(systemJob && system === 'CalSTRS')) return 0;
+      if (inSeparation[m]) return Math.min(pensionGross[m], jobPayIn[m]);
+      if (jobPayIn[m] > 0) {
+        const [y, mo] = d.split('-').map(Number);
+        const fy = mo >= 7 ? y : y - 1;
+        if (fy !== fyState.fy) Object.assign(fyState, { fy, earned: 0, excess: 0 });
+        fyState.earned += jobPayIn[m];
+        const limit = CALSTRS_EARNINGS_LIMIT * Math.pow(1 + config.spendingInflation, fy - CALSTRS_LIMIT_FY);
+        const excess = Math.min(Math.max(0, fyState.earned - limit), 12 * pensionGross[m]);
+        fyState.owed += excess - fyState.excess;
+        fyState.excess = excess;
+      }
+      const held = Math.min(pensionGross[m], fyState.owed);
+      fyState.owed -= held;
+      return held;
+    });
     const spousePayIn = monthDates.map(d => spouse && d < config.spouseRetirementDate ? config.spouseSalary : 0);
     const yourTest = earningsTest('you', config.yourBirthDate, yourFRA, config.yourSSStartAge, currentYourSS, jobPayIn);
     const spouseTest = earningsTest('spouse', config.spouseBirthDate, spouseFRA, config.spouseSSStartAge, currentSpouseSS, spousePayIn);
@@ -295,9 +354,7 @@ export function calculateProjection(config: Config): ProjectionResult {
         // Real calendar month being modeled: the first is the month after your retirement date.
         // Ages come from actual birth dates, not the rounded retirement age.
         const monthDate = monthDates[month];
-        const colaCount = Math.max(0,
-          Number(monthDate.slice(0, 4)) - firstColaYear + (Number(monthDate.slice(5, 7)) >= 5 ? 1 : 0));
-        const pension = config.pensionStart * Math.pow(1 + config.pensionCOLA, colaCount);
+        const pension = pensionGross[month] - pensionHeld[month];
         const yourCurrentAge = ageOn(config.yourBirthDate, monthDate);
         const spouseCurrentAge = spouse ? ageOn(config.spouseBirthDate, monthDate) : 0;
 
@@ -442,6 +499,7 @@ export function calculateProjection(config: Config): ProjectionResult {
           yearIndex: year,
           monthIndex: month,
           pension,
+          pensionHeld: pensionHeld[month],
           spousePension,
           spouseSalary,
           jobPay,
@@ -539,6 +597,7 @@ export function calculateProjection(config: Config): ProjectionResult {
       yearObj.months.push(m);
 
       yearObj.totalPension += m.pension;
+      yearObj.totalPensionHeld += m.pensionHeld;
       yearObj.totalSpousePension += m.spousePension;
       yearObj.totalSpouseSalary += m.spouseSalary;
       yearObj.totalJobPay += m.jobPay;
@@ -575,6 +634,8 @@ export function calculateProjection(config: Config): ProjectionResult {
     if (year === 0) notes.push('🎉 Retirement begins');
     if (yearObj.totalSpouseSalary > 0) notes.push(`💼 ${partner} still working`);
     if (yearObj.totalJobPay > 0) notes.push(`💼 ${you} working: ${formatNote(config.jobPay)}/mo gross`);
+    if (yearObj.totalPensionHeld > 0) notes.push(`✂️ CalSTRS work rules hold back ${formatNote(yearObj.totalPensionHeld)} of the pension`);
+    if (year === 0 && systemJob && system === 'CalPERS') notes.push('⏳ Retired-annuitant job starts after the 180-day wait');
     if (yearObj.totalSSHeldBack > 0) notes.push(`✂️ SS earnings test holds back ${formatNote(yearObj.totalSSHeldBack)} (credited back after full retirement age)`);
 
     const prevYear = yearlyData[yearlyData.length - 1];

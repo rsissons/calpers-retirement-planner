@@ -1,6 +1,6 @@
-# CalPERS Retirement Planner
+# CalPERS & CalSTRS Retirement Planner
 
-A private retirement planner for CalPERS members in California. You enter your pension details, Social Security, savings, spending and retiree health costs. It projects your household month by month from the day you retire to age 95 (or whatever age you choose), with real federal and California taxes, and shows whether the money lasts.
+A private retirement planner for CalPERS and CalSTRS members in California. You enter your pension details, Social Security, savings, spending and retiree health costs. It projects your household month by month from the day you retire to age 95 (or whatever age you choose), with real federal and California taxes, and shows whether the money lasts.
 
 It runs entirely in your web browser. There's no account, no server and no tracking, and your numbers never leave your device.
 
@@ -12,12 +12,12 @@ It runs entirely in your web browser. There's no account, no server and no track
 
 | You need | Where to get it |
 |---|---|
-| Your CalPERS retirement formula, service credit and final compensation | Your CalPERS Annual Member Statement, or [myCalPERS](https://my.calpers.ca.gov) |
-| A myCalPERS retirement estimate (to check the pension and get your beneficiary option factor) | myCalPERS, "Retirement Estimate Calculator" |
+| Your retirement formula, service credit and final compensation | CalPERS: your Annual Member Statement, or [myCalPERS](https://my.calpers.ca.gov). CalSTRS: your Retirement Progress Report in [myCalSTRS](https://www.calstrs.com/mycalstrs) |
+| A retirement estimate (to check the pension and get your beneficiary option factor) | myCalPERS "Retirement Estimate Calculator", or a myCalSTRS estimate |
 | Your Social Security estimate | [ssa.gov/myaccount](https://www.ssa.gov/myaccount/) |
 | Gross pay for a spouse who's still working, or for a job you'd take after retiring | Paystubs or a job offer |
 | 403(b), 457(b), Roth IRA and savings balances | Your latest statements |
-| Retiree health premiums and your employer's retiree contribution | CalPERS health plan rates for your region, plus HR or your bargaining unit's MOU |
+| Retiree health premiums and your employer's retiree contribution | CalPERS health plan rates for your region, or your school district's retiree plan (CalSTRS has none), plus HR or your bargaining unit's MOU |
 | Monthly spending, split into essential and discretionary, and your loan payments | A year of bank and card statements, or a budgeting app |
 
 [docs/USER_GUIDE.md](docs/USER_GUIDE.md) walks through each one.
@@ -27,7 +27,9 @@ It runs entirely in your web browser. There's no account, no server and no track
 - **CalPERS members:** School, State (Miscellaneous & Industrial, and Safety) and Local (Miscellaneous and Safety), classic or PEPRA. All 32 benefit factor charts CalPERS publishes are built in.
 - **California residents**, single or married filing jointly.
 
-It isn't built for CalSTRS members, other states' taxes, or other pension systems. A spouse's pension from any system can be entered as a flat monthly amount, though.
+- **CalSTRS members** (added in 1.3.0): 2% at 60 and 2% at 62, with CalSTRS's monthly age factors, the career factor, the simple 2% benefit adjustment, and the working-after-retirement rules. The Defined Benefit Supplement isn't modeled; add its balance to savings.
+
+It isn't built for other states' taxes or other pension systems. A spouse's pension from any system can be entered as a flat monthly amount, though.
 
 ## Getting started
 
@@ -35,7 +37,7 @@ It isn't built for CalSTRS members, other states' taxes, or other pension system
 
 **Or download it** to use offline:
 
-1. Download `CalPERS-Retirement-Planner-1.2.0.html` from the [latest release](https://github.com/rsissons/calpers-retirement-planner/releases/latest) and save it anywhere, like your Documents folder.
+1. Download `CalPERS-Retirement-Planner-1.3.0.html` from the [latest release](https://github.com/rsissons/calpers-retirement-planner/releases/latest) and save it anywhere, like your Documents folder.
 2. Double-click it. It opens in your browser.
 3. It opens on the **Guide** with a made-up sample household loaded. Click **Enter my numbers** and replace the sample figures with yours.
 4. Your numbers save automatically in that browser. Use **Save to file** in the menu (☰) to keep a backup you can move to another computer or browser.
@@ -44,7 +46,7 @@ It isn't built for CalSTRS members, other states' taxes, or other pension system
 
 ## Your privacy
 
-- The planner makes no network requests. The math, the charts and the page itself are all inside the one file. The only outside addresses are ordinary links (CalPERS charts, myCalPERS, ssa.gov) that open only if you click them.
+- The planner makes no network requests. The math, the charts and the page itself are all inside the one file. The only outside addresses are ordinary links (CalPERS charts, the CalSTRS handbook, myCalPERS, myCalSTRS, ssa.gov) that open only if you click them.
 - Your numbers are saved only in your browser's local storage, on your device. Clearing your browser data erases them. So does "Start over with the sample" in the menu.
 - "Save to file" downloads a plain JSON file with your numbers. Treat it like any financial document.
 - Anyone who uses the same browser profile on the same device can open the planner and see your numbers.
@@ -57,7 +59,7 @@ The short version is on the Guide page inside the planner. [docs/ASSUMPTIONS.md]
 - Investment returns are a steady rate every year, so there's no market-crash or sequence-of-returns risk.
 - It doesn't model IRMAA (the Medicare surcharge at higher incomes), long-term care, or big one-time expenses.
 
-**This is a planning tool, not financial, tax or legal advice.** Confirm your pension with CalPERS before making decisions.
+**This is a planning tool, not financial, tax or legal advice.** Confirm your pension with CalPERS or CalSTRS before making decisions.
 
 ---
 
@@ -81,7 +83,7 @@ npm run lint
 
 | File | What it does |
 |---|---|
-| `src/formulas.ts` | All 32 CalPERS benefit factor tables, minimum ages and caps, from CalPERS's charts |
+| `src/formulas.ts` | All 32 CalPERS benefit factor tables (from CalPERS's charts) and the 2 CalSTRS age factor tables (from the CalSTRS Member Handbook), with minimum ages, caps and the career factor |
 | `src/calpers.ts` | Pension calculation, date and age helpers, RMD start age |
 | `src/tax.ts` | Federal and California brackets, joint and single, and Social Security taxation |
 | `src/savings.ts` | Grows today's balances to the retirement date |
@@ -102,7 +104,7 @@ These go stale and should be checked each year:
 - **Tax brackets and deductions** in `src/tax.ts`: IRS Rev. Proc. for the new year; FTB Form 540 tax rate schedules and booklet.
 - **Part B premium** in the sample in `src/config.ts`: the CMS announcement each fall.
 - **Sample health premiums** in `src/config.ts`: CalPERS health rates.
-- **Benefit factors** in `src/formulas.ts`: these rarely change, but re-check them against the [CalPERS charts](https://www.calpers.ca.gov/members/retirement-benefits/benefit-factor-charts) if CalPERS revises them.
+- **Benefit factors** in `src/formulas.ts`: these rarely change, but re-check them against the [CalPERS charts](https://www.calpers.ca.gov/members/retirement-benefits/benefit-factor-charts) (and the CalSTRS tables against the CalSTRS Member Handbook) if CalPERS revises them.
 
 After any change, run `npm test` and `npm run build:single`. Then `npm run publish:pages` updates the online version (it runs the checks, builds, and pushes `dist/` to the `gh-pages` branch), and the new single file goes on a GitHub release.
 

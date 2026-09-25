@@ -59,9 +59,13 @@ export const Overview: FC<Props> = ({ config, projection }) => {
   const monthlySpend = m1.essentialSpending + m1.discretionarySpending + m1.debtPayments;
   const surplus = monthlyNet - monthlySpend;
 
-  // Monthly pension N years in, from the projection (CalPERS COLA timing)
-  const pensionInYear = (n: number) => projection.yearly[Math.min(n, projection.yearly.length - 1)].months[0].pension;
-  const pensionAtEnd = last.months[11].pension;
+  // Monthly pension N years in, from the projection (the system's COLA timing), before any work-rule holdback
+  const grossPension = (m: { pension: number; pensionHeld: number }) => m.pension + m.pensionHeld;
+  const pensionInYear = (n: number) => grossPension(projection.yearly[Math.min(n, projection.yearly.length - 1)].months[0]);
+  const pensionAtEnd = grossPension(last.months[11]);
+  const pension = calculatePension(config);
+  const sys = pension.system;
+  const colaText = `+${(config.pensionCOLA * 100).toFixed(0)}% ${sys === 'CalSTRS' ? 'simple COLA' : 'COLA'}`;
 
   // Total assets
   const startAssets = config.startingCash + config.starting403b + config.startingRoth;
@@ -107,7 +111,6 @@ export const Overview: FC<Props> = ({ config, projection }) => {
   ];
   const span = Math.max(...people.map(p => p.endAge));
 
-  const pension = calculatePension(config);
   const firstRmd = projection.yearly.find(y => y.rmdRequired > 0)?.rmdRequired ?? 0;
 
   return (
@@ -116,12 +119,12 @@ export const Overview: FC<Props> = ({ config, projection }) => {
       {/* ── TOP KPI ROW ── */}
       <div className="grid grid-cols-1 min-[420px]:grid-cols-2 md:grid-cols-4 gap-4">
         <KPI label="Net Income, First Month" value={$(monthlyNet)} sub={`${surplus >= 0 ? '+' : ''}${$(surplus)} vs. expenses`} color={surplus >= 0 ? C.green : C.vermillion} />
-        <KPI label="CalPERS Pension (Start)" value={$(config.pensionStart) + '/mo'} sub={`+${(config.pensionCOLA * 100).toFixed(0)}% COLA · ${$(pensionAtEnd)}/mo at age ${last.age}`} color={C.blue} />
+        <KPI label={`${sys} Pension (Start)`} value={$(config.pensionStart) + '/mo'} sub={`${colaText} · ${$(pensionAtEnd)}/mo at age ${last.age}`} color={C.blue} />
         <KPI label="Liquid Assets at Retirement" value={$k(startAssets)} sub={`Savings: ${$k(config.startingCash)} · 403b: ${$k(config.starting403b)} · Roth: ${$k(config.startingRoth)}`} color={C.navy} />
         <KPI label="Projected Funded Through" value={fundedThrough} sub={endAssets > 10000 ? `${$k(endAssets)} remaining at age ${last.age}` : 'Assets run out. Review the plan.'} color={endAssets > 10000 ? C.green : C.vermillion} />
       </div>
 
-      {/* ── ROW 2: Countdown + CalPERS ── */}
+      {/* ── ROW 2: Countdown + pension ── */}
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
 
         {/* Retirement Countdown */}
@@ -159,21 +162,21 @@ export const Overview: FC<Props> = ({ config, projection }) => {
           </div>
         </div>
 
-        {/* CalPERS Panel */}
+        {/* Pension panel */}
         <div className="bg-white rounded-lg border border-gray-200 shadow-sm p-5">
-          <h3 className="text-base font-bold text-[#15325b] mb-1">🏛 CalPERS Pension</h3>
+          <h3 className="text-base font-bold text-[#15325b] mb-1">🏛 {sys} Pension</h3>
           <p className="text-xs text-gray-400 mb-4">
             {config.pensionFromFormula
-              ? `${pension.formula.category} ${pension.formula.name} · ${(pension.ageFactor * 100).toFixed(3)}% × ${pension.serviceYears.toFixed(2)} yrs × ${$(config.finalCompensation)} · option factor ${(config.beneficiaryOptionFactor * 100).toFixed(1)}% · age ${pension.ageYears}y ${pension.ageMonths}m`
+              ? `${pension.formula.category === 'CalSTRS' ? 'CalSTRS' : pension.formula.category} ${pension.formula.name} · ${(pension.ageFactor * 100).toFixed(3)}% × ${pension.serviceYears.toFixed(2)} yrs × ${$(config.finalCompensation)} · option factor ${(config.beneficiaryOptionFactor * 100).toFixed(1)}% · age ${pension.ageYears}y ${pension.ageMonths}m`
               : `Retire age ${config.retirementAge} · amount entered by hand`}
           </p>
           {config.pensionFromFormula && !pension.eligible && (
-            <p className="text-sm font-semibold mb-3" style={{ color: C.vermillion }}>Under the minimum retirement age ({pension.formula.minAge}) for this formula, so the pension is $0.</p>
+            <p className="text-sm font-semibold mb-3" style={{ color: C.vermillion }}>Under the minimum retirement age for this formula, so the pension is $0.</p>
           )}
           <div className="grid grid-cols-2 gap-3">
             {[
               { label: 'Starting Monthly Pension', value: $(config.pensionStart), color: C.blue },
-              { label: 'Annual COLA Rate', value: `${(config.pensionCOLA * 100).toFixed(0)}%/yr`, color: C.green },
+              { label: sys === 'CalSTRS' ? 'Annual COLA (simple)' : 'Annual COLA Rate', value: `${(config.pensionCOLA * 100).toFixed(0)}%/yr`, color: C.green },
               { label: 'Monthly at Age ' + (config.retirementAge + 10), value: $(pensionInYear(10)), color: C.blue },
               { label: 'Monthly at Age ' + (config.retirementAge + 20), value: $(pensionInYear(20)), color: C.blue },
               { label: `Lifetime Total (to Age ${last.age})`, value: $k(projection.metrics.lifetimePension), color: C.green },

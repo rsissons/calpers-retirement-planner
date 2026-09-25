@@ -1,6 +1,7 @@
 import type { FC } from 'react';
 import type { Config } from '../config';
 import type { ProjectionResult } from '../projection';
+import { formulaById, systemOf } from '../formulas';
 import { Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer, Line, ComposedChart } from 'recharts';
 
 interface Props {
@@ -15,7 +16,7 @@ export const IncomeBreakdown: FC<Props> = ({ config, projection }) => {
 
   // Each income stream as its own stacked bar, with total spending (incl. health and taxes) as a line
   const series = [
-    { key: 'CalPERS Pension', color: '#3b82f6', get: (y: ProjectionResult['yearly'][number]) => y.totalPension, show: true },
+    { key: `${systemOf(formulaById(config.pensionFormulaId))} Pension`, color: '#3b82f6', get: (y: ProjectionResult['yearly'][number]) => y.totalPension, show: true },
     { key: `${partner} Pension`, color: '#0ea5e9', get: (y: ProjectionResult['yearly'][number]) => y.totalSpousePension, show: spouse },
     { key: `${partner} ${config.spousePayIsGross ? 'Pay' : 'Take-Home'}`, color: '#10b981', get: (y: ProjectionResult['yearly'][number]) => y.totalSpouseSalary, show: spouse },
     { key: `${you} Job`, color: '#14b8a6', get: (y: ProjectionResult['yearly'][number]) => y.totalJobPay, show: true },
