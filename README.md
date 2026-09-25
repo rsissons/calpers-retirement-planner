@@ -103,6 +103,8 @@ These go stale and should be checked each year:
 
 - **Tax brackets and deductions** in `src/tax.ts`: IRS Rev. Proc. for the new year; FTB Form 540 tax rate schedules and booklet.
 - **Part B premium** in the sample in `src/config.ts`: the CMS announcement each fall.
+- **Payroll and Social Security figures** in `src/tax.ts`: the Social Security wage base and earnings test limits (SSA's COLA fact sheet each October), and the California SDI rate (EDD, each fall).
+- **CalSTRS postretirement earnings limit** in `src/projection.ts` (`CALSTRS_EARNINGS_LIMIT`, `CALSTRS_LIMIT_FY`): it's set each fiscal year, so check [CalSTRS.com/limits](https://www.calstrs.com/limits) every July.
 - **Sample health premiums** in `src/config.ts`: CalPERS health rates.
 - **Benefit factors** in `src/formulas.ts`: these rarely change, but re-check them against the [CalPERS charts](https://www.calpers.ca.gov/members/retirement-benefits/benefit-factor-charts) (and the CalSTRS tables against the CalSTRS Member Handbook) if CalPERS revises them.
 
