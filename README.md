@@ -37,7 +37,7 @@ It isn't built for other states' taxes or other pension systems. A spouse's pens
 
 **Or download it** to use offline:
 
-1. Download `CalPERS-Retirement-Planner-1.3.3.html` from the [latest release](https://github.com/rsissons/calpers-retirement-planner/releases/latest) and save it anywhere, like your Documents folder.
+1. Download `CalPERS-Retirement-Planner-1.4.0.html` from the [latest release](https://github.com/rsissons/calpers-retirement-planner/releases/latest) and save it anywhere, like your Documents folder.
 2. Double-click it. It opens in your browser.
 3. It opens on the **Guide** with a made-up sample household loaded. Click **Enter my numbers** and replace the sample figures with yours.
 4. Your numbers save automatically in that browser. Use **Save to file** in the menu (☰) to keep a backup you can move to another computer or browser.
@@ -49,6 +49,7 @@ It isn't built for other states' taxes or other pension systems. A spouse's pens
 - The planner makes no network requests. The math, the charts and the page itself are all inside the one file. The only outside addresses are ordinary links (CalPERS charts, the CalSTRS handbook, myCalPERS, myCalSTRS, ssa.gov) that open only if you click them.
 - Your numbers are saved only in your browser's local storage, on your device. Clearing your browser data erases them. So does "Start over with the sample" in the menu.
 - "Save to file" downloads a plain JSON file with your numbers. Treat it like any financial document.
+- If you enter an invite license key (menu, "Enter license key"), it is checked on your device against a public key built into the page, and remembered in the same local storage. Nothing is sent anywhere, and the key is never part of a saved plan file. The key doesn't change how the planner works yet.
 - Anyone who uses the same browser profile on the same device can open the planner and see your numbers.
 
 ## What it models, and what it doesn't

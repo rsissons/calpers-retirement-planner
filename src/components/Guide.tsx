@@ -43,6 +43,15 @@ export const Guide: FC = () => (
       </p>
     </Section>
 
+    <Section title="Got an invite? Enter your license key">
+      <ol className="list-decimal pl-5 space-y-1">
+        <li>On the invite page, download the key file or copy the key.</li>
+        <li>Here, open the menu (top left) and choose <b>Enter license key</b>.</li>
+        <li>Paste the key, or choose the file you downloaded, and press <b>Check key</b>. A green <b>Full planner</b> tag appears when it's accepted.</li>
+      </ol>
+      <p className="text-xs text-gray-500">Checking happens on your device and works offline. The key is remembered in this browser only, so enter it again on another device or browser. <b>Remove key</b> is in the same place. Right now the key doesn't change how the planner works.</p>
+    </Section>
+
     <Section title="What to gather">
       <p><b>First, which system are you in?</b> Teachers and other certificated school staff (K-12 and community college) are in <b>CalSTRS</b>. State, city, county and special-district employees, and classified school staff (office, custodial, transportation, IT), are in <b>CalPERS</b>. Your paystub shows which one takes your retirement contribution. Gather the list for your system, plus the list for everyone.</p>
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4 pt-1">

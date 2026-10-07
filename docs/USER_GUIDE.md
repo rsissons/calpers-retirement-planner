@@ -155,9 +155,21 @@ A simple way to estimate spending: add up 12 months of bank and credit card stat
 - **Start over with the sample** erases your numbers from this browser and reloads the made-up sample. Save to a file first if you want to keep them.
 - Clearing your browser's history or site data also erases the saved numbers, and so does using a private window. Keep a saved file.
 
+### If you got an invite and a license key
+
+1. On the invite page, download the key file or copy the key.
+2. In the planner, open the menu (top left) and choose **Enter license key**.
+3. Paste the key, or choose the file you downloaded, and press **Check key**. A green **Full planner** tag appears when it's accepted.
+
+Checking happens on your device and works offline; the key is never sent anywhere. It's remembered in that browser only, so enter it again on another device or browser. **Remove key** is in the same place. Right now the key doesn't change how the planner works. It's separate from your plan file, so saving or opening a plan never includes it.
+
 ---
 
 ## 5. Troubleshooting
+
+**The planner says my license key didn't check out.** Copy the whole key again from the invite page, or download the key file and choose it with **Choose key file**. A key that was cut off or edited won't verify.
+
+**It says my browser can't check license keys.** Use a recent Chrome, Edge, Firefox or Safari (version 17 or newer). Older browsers can't do the check.
 
 **My numbers disappeared.** The browser's storage was cleared, you're in a private window, or you opened the planner in a different browser or from a different copy of the file. Use **Open file** with your saved plan.
 

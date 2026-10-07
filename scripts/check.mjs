@@ -143,6 +143,57 @@ const rowsSum = y => y.totalIncome - y.totalIncomeTaxes - y.totalPayrollTaxes - 
 ok([base, single, sp, job, big, et, oldRun].every(r => r.yearly.every(y => Math.abs(rowsSum(y) + y.totalGap) < 0.01)), "budget rows add up to each year's surplus");
 // Edge: retire past end age, no crash
 ok(run({ projectionEndAge: 60 }).yearly.length === 1, 'end age before retirement gives one year');
+
+// License keys: the invite key is checked offline against the public key built into the planner
+const L = await v.ssrLoadModule('/src/license.ts');
+const subtle = globalThis.crypto.subtle;
+const b64u = bytes => Buffer.from(bytes).toString('base64url');
+const makePair = () => subtle.generateKey('Ed25519', true, ['sign', 'verify']);
+const pairA = await makePair(), pairB = await makePair();
+const pubA = b64u(await subtle.exportKey('raw', pairA.publicKey));
+const mint = async (payload, kp = pairA) => {
+  const body = b64u(new TextEncoder().encode(JSON.stringify(payload)));
+  return 'PP1.' + body + '.' + b64u(await subtle.sign('Ed25519', kp.privateKey, new TextEncoder().encode('PP1.' + body)));
+};
+const goodKey = await mint({ v: 1, id: 'abc123', tier: 'full', iat: '2026-10-08T10:30:00.000Z' });
+const lic = async (text, key = pubA) => L.verifyLicense(text, key);
+const swapCrypto = async (fake, fn) => {
+  const saved = Object.getOwnPropertyDescriptor(globalThis, 'crypto');
+  Object.defineProperty(globalThis, 'crypto', { value: fake, configurable: true });
+  try { return await fn(); } finally { Object.defineProperty(globalThis, 'crypto', saved); }
+};
+
+const good = await lic(goodKey);
+ok(good.valid === true && good.payload.tier === 'full' && good.payload.id === 'abc123' && good.payload.iat.startsWith('2026-10-08'), 'license: a good key verifies and returns its details');
+ok((await lic('  \n' + goodKey.slice(0, 40) + '\r\n' + goodKey.slice(40) + ' \n')).valid === true, 'license: spaces and line breaks in a pasted key are tolerated');
+ok((await lic('"' + goodKey + '"')).valid === true, 'license: quotes around a pasted key are tolerated');
+const parts = goodKey.split('.');
+ok((await lic([parts[0], parts[1].slice(0, 12) + (parts[1][12] === 'A' ? 'B' : 'A') + parts[1].slice(13), parts[2]].join('.'))).reason === 'bad_signature', 'license: an edited key is rejected as changed');
+ok((await lic(goodKey.slice(0, -6))).valid === false, 'license: a cut-off key is rejected');
+ok((await lic(await mint({ v: 1, id: 'x', tier: 'full', iat: 'y' }, pairB))).reason === 'bad_signature', 'license: a key signed by someone else is rejected');
+for (const [text, reason] of [['', 'empty'], ['   \n ', 'empty'], ['hello', 'malformed'], ['PP1.onlytwo', 'malformed'], ['XX1.a.b', 'malformed'], ['PP1..', 'malformed'], ['PP1.@@@.@@@', 'malformed']]) {
+  ok((await lic(text)).reason === reason, `license: ${JSON.stringify(text)} is ${reason}`);
+}
+ok((await lic(await mint({ v: 2, id: 'x', tier: 'full', iat: 'y' }))).reason === 'wrong_version', 'license: a key for a newer format is flagged as a different version');
+ok((await lic(await mint({ v: 1, id: 'x', tier: 'gold', iat: 'y' }))).reason === 'wrong_version', 'license: an unknown tier is flagged as a different version');
+ok((await swapCrypto({}, () => lic(goodKey))).reason === 'unsupported', 'license: no WebCrypto at all is "unsupported", not "invalid"');
+ok((await swapCrypto({ subtle: { importKey: async () => { throw new DOMException('no', 'NotSupportedError'); } } }, () => lic(goodKey))).reason === 'unsupported', 'license: a browser without Ed25519 is "unsupported", not "invalid"');
+ok(L.PUBLIC_KEY.length === 43 && (await subtle.importKey('raw', Buffer.from(L.PUBLIC_KEY, 'base64url'), 'Ed25519', false, ['verify'])).type === 'public', 'license: the built-in public key is a valid Ed25519 key');
+const reasons = ['empty', 'malformed', 'bad_signature', 'wrong_version', 'unsupported'];
+ok(reasons.every(r => typeof L.messageFor(r) === 'string' && L.messageFor(r).length > 20), 'license: every failure has a plain message');
+ok(reasons.every(r => !/ed25519|signature|webcrypto|payload|base64|cryptograph/i.test(L.messageFor(r))), 'license: no jargon in the messages');
+// Remembering the key in the browser
+const store = {};
+globalThis.localStorage = { getItem: k => (k in store ? store[k] : null), setItem: (k, x) => { store[k] = String(x); }, removeItem: k => { delete store[k]; } };
+ok(L.loadStoredKey() === null, 'license: nothing stored at first');
+ok(L.saveKey(goodKey) === true && L.loadStoredKey() === goodKey, 'license: a key is stored and read back');
+L.clearKey();
+ok(L.loadStoredKey() === null, 'license: Remove key clears it');
+const boom = () => { throw new Error('blocked'); };
+globalThis.localStorage = { getItem: boom, setItem: boom, removeItem: boom };
+ok(L.loadStoredKey() === null && L.saveKey(goodKey) === false, 'license: blocked storage never throws; save reports failure');
+L.clearKey();
+delete globalThis.localStorage;
 console.log(fails ? `${fails} FAILURES` : 'ALL PASS');
 process.exitCode = fails ? 1 : 0;
 await v.close();

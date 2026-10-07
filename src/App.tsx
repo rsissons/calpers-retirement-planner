@@ -12,8 +12,11 @@ import { DataTable } from './components/DataTable';
 import { Settings } from './components/Settings';
 import { QuickAdjust } from './components/QuickAdjust';
 import { Guide } from './components/Guide';
+import { LicenseDialog } from './components/LicenseDialog';
+import { verifyLicense, loadStoredKey } from './license';
+import type { LicensePayload } from './license';
 import { formulaById, systemOf } from './formulas';
-import { LayoutDashboard, PieChart, Layers, LineChart as LineChartIcon, Settings as SettingsIcon, TableProperties, Menu, X, ChevronRight, Pencil, Sliders, BookOpen, Download, Upload, RotateCcw } from 'lucide-react';
+import { LayoutDashboard, PieChart, Layers, LineChart as LineChartIcon, Settings as SettingsIcon, TableProperties, Menu, X, ChevronRight, Pencil, Sliders, BookOpen, Download, Upload, RotateCcw, KeyRound, BadgeCheck } from 'lucide-react';
 import { clsx, type ClassValue } from 'clsx';
 import { twMerge } from 'tailwind-merge';
 
@@ -36,6 +39,15 @@ function App() {
   const [isSettingsPanelOpen, setIsSettingsPanelOpen] = useState(false);
   const [notice, setNotice] = useState<{ text: string; error?: boolean } | null>(null);
   const fileInput = useRef<HTMLInputElement>(null);
+
+  // A license key remembered in this browser is checked again on every load; nothing is sent anywhere
+  const [license, setLicense] = useState<LicensePayload | null>(null);
+  const [isLicenseOpen, setIsLicenseOpen] = useState(false);
+  useEffect(() => {
+    const stored = loadStoredKey();
+    if (!stored) return;
+    verifyLicense(stored).then(r => { if (r.valid) setLicense(r.payload); });
+  }, []);
 
   // Any edit makes the plan the person's own, and from then on it's saved in this browser
   const setConfig: Dispatch<SetStateAction<Config>> = (update) => {
@@ -71,6 +83,7 @@ function App() {
       if (e.key === 'Escape') {
         setIsSidebarOpen(false);
         setIsSettingsPanelOpen(false);
+        setIsLicenseOpen(false);
       }
     };
     window.addEventListener('keydown', onKey);
@@ -145,6 +158,11 @@ function App() {
             <div className="min-w-0">
               <h1 className="text-lg font-bold text-white tracking-tight leading-tight truncate">{config.planName || 'My Plan'}</h1>
               <p className="text-[10px] text-blue-400 font-bold uppercase tracking-widest mt-1">CalPERS & CalSTRS Retirement Planner</p>
+              {license && (
+                <span className="inline-flex items-center gap-1 mt-1.5 text-[10px] font-bold uppercase tracking-widest text-emerald-300 bg-emerald-500/10 border border-emerald-400/20 rounded-full px-2 py-0.5">
+                  <BadgeCheck size={11} /> Full planner
+                </span>
+              )}
             </div>
           </div>
 
@@ -193,6 +211,11 @@ function App() {
           </div>
           <button onClick={onStartOver} className="w-full flex items-center justify-center gap-1.5 text-slate-500 hover:text-slate-300 text-xs py-1.5 transition-colors">
             <RotateCcw size={12} /> Start over with the sample
+          </button>
+          <p className="text-[10px] text-slate-500 font-bold uppercase tracking-widest px-1 pt-2">License</p>
+          <button onClick={() => { setIsSidebarOpen(false); setIsLicenseOpen(true); }}
+            className="w-full flex items-center justify-center gap-1.5 bg-slate-800 hover:bg-slate-700 text-slate-200 text-xs font-bold py-2.5 rounded-xl transition-colors">
+            {license ? <><BadgeCheck size={14} className="text-emerald-400" /> Full planner: key accepted</> : <><KeyRound size={14} /> Enter license key</>}
           </button>
         </div>
       </aside>
@@ -328,6 +351,9 @@ function App() {
           </div>
         </div>
       </div>
+
+      <LicenseDialog open={isLicenseOpen} onClose={() => setIsLicenseOpen(false)} license={license}
+        onAccepted={setLicense} onRemoved={() => setLicense(null)} />
     </div>
   );
 }
