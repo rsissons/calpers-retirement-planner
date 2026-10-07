@@ -86,3 +86,19 @@ export function saveKey(key: string): boolean {
 export function clearKey() {
   try { localStorage.removeItem(STORAGE_KEY); } catch { /* storage unavailable */ }
 }
+
+// Download the key as a small text file, so it can be kept somewhere safe and entered again in another browser.
+// It is only the key; the person's numbers are in the plan file, which is a separate download.
+export const KEY_FILE_NAME = 'planner-license-key.txt';
+
+export function downloadKeyFile(key: string) {
+  const blob = new Blob([key + '\n'], { type: 'text/plain' });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = KEY_FILE_NAME;
+  document.body.appendChild(a);
+  a.click();
+  a.remove();
+  setTimeout(() => URL.revokeObjectURL(url), 1000);
+}

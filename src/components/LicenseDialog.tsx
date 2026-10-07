@@ -1,7 +1,7 @@
 import { useRef, useState } from 'react';
 import type { ChangeEvent, FC } from 'react';
 import { BadgeCheck, KeyRound, X } from 'lucide-react';
-import { verifyLicense, messageFor, saveKey, clearKey } from '../license';
+import { verifyLicense, messageFor, saveKey, clearKey, loadStoredKey, downloadKeyFile } from '../license';
 import type { LicensePayload } from '../license';
 
 interface Props {
@@ -26,6 +26,7 @@ const LicenseDialogBody: FC<Omit<Props, 'open'>> = ({ onClose, license, onAccept
   const [text, setText] = useState('');
   const [busy, setBusy] = useState(false);
   const [message, setMessage] = useState<{ text: string; bad: boolean } | null>(null);
+  const [acceptedKey, setAcceptedKey] = useState<string | null>(null);
   const fileInput = useRef<HTMLInputElement>(null);
 
   const check = async (raw: string) => {
@@ -37,7 +38,9 @@ const LicenseDialogBody: FC<Omit<Props, 'open'>> = ({ onClose, license, onAccept
       setMessage({ text: messageFor(result.reason), bad: true });
       return;
     }
-    const saved = saveKey(raw.replace(/["'\s]+/g, ''));
+    const cleaned = raw.replace(/["'\s]+/g, '');
+    const saved = saveKey(cleaned);
+    setAcceptedKey(cleaned);
     onAccepted(result.payload);
     setMessage({
       text: saved
@@ -59,12 +62,16 @@ const LicenseDialogBody: FC<Omit<Props, 'open'>> = ({ onClose, license, onAccept
 
   const remove = () => {
     clearKey();
+    setAcceptedKey(null);
     onRemoved();
     setText('');
     setMessage({ text: 'Key removed from this browser.', bad: false });
   };
 
-  const primary = 'bg-[#0072B2] hover:bg-[#005f94] text-white font-semibold px-4 py-2.5 rounded-lg disabled:opacity-50 disabled:cursor-not-allowed';
+  // The key accepted in this dialog, or the one remembered from an earlier visit or the invite link
+  const keyText = license ? (acceptedKey ?? loadStoredKey()) : null;
+
+  const primary ='bg-[#0072B2] hover:bg-[#005f94] text-white font-semibold px-4 py-2.5 rounded-lg disabled:opacity-50 disabled:cursor-not-allowed';
   const secondary = 'border border-slate-300 hover:bg-slate-50 text-slate-700 font-semibold px-4 py-2.5 rounded-lg';
 
   return (
@@ -88,8 +95,13 @@ const LicenseDialogBody: FC<Omit<Props, 'open'>> = ({ onClose, license, onAccept
               Your key is accepted on this device{issuedOn(license.iat) ? <>. It was issued on <b>{issuedOn(license.iat)}</b></> : null}. Your own numbers, saving and opening plan files are unlocked.
             </p>
             {message && <p role="status" className={message.bad ? 'text-sm font-medium text-red-700' : 'text-sm font-medium text-emerald-700'}>{message.text}</p>}
+            <p className="text-sm text-slate-600">
+              Keep a copy of your key somewhere safe. You'll need it again in another browser or on another device. The key file is only the key; it is not your plan.
+              Your numbers are saved separately with <b>Save to file</b> in the menu.
+            </p>
             <div className="flex flex-wrap gap-2 pt-1">
               <button onClick={onClose} className={primary}>Done</button>
+              {keyText && <button onClick={() => downloadKeyFile(keyText)} className={secondary}>Download key file</button>}
               <button onClick={remove} className={secondary}>Remove key</button>
             </div>
           </>

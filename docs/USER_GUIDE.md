@@ -167,6 +167,19 @@ The one-click button puts the key in the web address after a `#`. Browsers never
 
 Checking happens on your device and works offline; the key is never sent anywhere. It's remembered in that browser only, so enter it again on another device or browser. **Remove key** is in the same place. The key unlocks Your Numbers, Save to file, Open file and saving in your browser. Without a key you can still explore the sample and try Quick Adjust (nothing from Quick Adjust is saved). The key is separate from your plan file, so saving or opening a plan never includes it.
 
+### Two files to keep, and moving to another browser or device
+
+- **Your key file** unlocks the planner. It holds only the key. Download it from the invite page, or from the key dialog (menu, **Enter license key**, then **Download key file**).
+- **Your plan file** holds your numbers. Make it with **Save to file** in the menu. It does not contain your key.
+
+Your plan and your key are remembered in the browser you used. Another browser, or another device, starts empty. To move over:
+
+1. In the old browser, choose **Save to file** in the menu. That downloads your plan file. Keep it somewhere you can reach from the new place, such as email to yourself, a cloud drive or a USB stick.
+2. In the new browser, open the planner and enter your key: press **Open the planner with my key** on the invite page, or choose **Enter license key** in the menu and use your key file. If you've lost the key, enter your code and email on the invite page again and the same key comes back.
+3. Then choose **Open file** in the menu and pick your plan file. Your numbers appear. (**Open file** needs the key first, so do step 2 before this one.)
+
+After that, each browser keeps its own copy. The copies do not sync, so changes you make in one don't appear in the other. Whichever one you want to keep, use **Save to file** again from there.
+
 ---
 
 ## 5. Troubleshooting

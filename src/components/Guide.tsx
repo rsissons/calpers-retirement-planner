@@ -53,6 +53,20 @@ export const Guide: FC = () => (
       <p className="text-xs text-gray-500">Checking happens on your device and works offline. The key is remembered in this browser only, so enter it again on another device or browser. <b>Remove key</b> is in the same place. The key unlocks <b>Your Numbers</b>, <b>Save to file</b>, <b>Open file</b> and saving in your browser. Without a key you can still explore the sample and try Quick Adjust.</p>
     </Section>
 
+    <Section title="Two files to keep, and moving to another browser">
+      <ul className="list-disc pl-5 space-y-1">
+        <li><b>Your key file</b> unlocks the planner. It holds only the key. Download it from the invite page or from the key dialog (menu, <b>Enter license key</b>).</li>
+        <li><b>Your plan file</b> holds your numbers. Make it with <b>Save to file</b> in the menu. It does not contain your key.</li>
+      </ul>
+      <p>Your plan and your key are remembered in the browser you used. Another browser, or another device, starts empty. To move over:</p>
+      <ol className="list-decimal pl-5 space-y-1">
+        <li>In the old browser, choose <b>Save to file</b> in the menu. That downloads your plan file. Keep it somewhere you can reach from the new place, such as email to yourself, a cloud drive or a USB stick.</li>
+        <li>In the new browser, open the planner and enter your key: press <b>Open the planner with my key</b> on the invite page, or choose <b>Enter license key</b> in the menu and use your key file. If you've lost the key, enter your code and email on the invite page again and the same key comes back.</li>
+        <li>Then choose <b>Open file</b> in the menu and pick your plan file. Your numbers appear. (<b>Open file</b> needs the key first, so do step 2 before this one.)</li>
+      </ol>
+      <p className="text-xs text-gray-500">After that, each browser keeps its own copy. The copies do not sync, so changes you make in one don't appear in the other. Whichever one you want to keep, use <b>Save to file</b> again from there.</p>
+    </Section>
+
     <Section title="What to gather">
       <p><b>First, which system are you in?</b> Teachers and other certificated school staff (K-12 and community college) are in <b>CalSTRS</b>. State, city, county and special-district employees, and classified school staff (office, custodial, transportation, IT), are in <b>CalPERS</b>. Your paystub shows which one takes your retirement contribution. Gather the list for your system, plus the list for everyone.</p>
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4 pt-1">
