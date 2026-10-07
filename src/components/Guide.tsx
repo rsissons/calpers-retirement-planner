@@ -46,9 +46,9 @@ export const Guide: FC = () => (
 
     <Section title="Got an invite? Enter your license key">
       <ol className="list-decimal pl-5 space-y-1">
-        <li>On the invite page, download the key file or copy the key.</li>
-        <li>Here, open the menu (top left) and choose <b>Enter license key</b>.</li>
-        <li>Paste the key, or choose the file you downloaded, and press <b>Check key</b>. A green <b>Full planner</b> tag appears when it's accepted.</li>
+        <li>On the invite page, press <b>Open the planner with my key</b>. The planner opens already unlocked and a green <b>Full planner</b> tag appears. That's all.</li>
+        <li>If that doesn't work (for example you want it in a different browser), download the key file or copy the key from the invite page, open the menu (top left) here and choose <b>Enter license key</b>.</li>
+        <li>Paste the key, or choose the file you downloaded, and press <b>Check key</b>.</li>
       </ol>
       <p className="text-xs text-gray-500">Checking happens on your device and works offline. The key is remembered in this browser only, so enter it again on another device or browser. <b>Remove key</b> is in the same place. The key unlocks <b>Your Numbers</b>, <b>Save to file</b>, <b>Open file</b> and saving in your browser. Without a key you can still explore the sample and try Quick Adjust.</p>
     </Section>

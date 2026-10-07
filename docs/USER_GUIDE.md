@@ -159,9 +159,11 @@ A simple way to estimate spending: add up 12 months of bank and credit card stat
 
 ### If you got an invite and a license key
 
-1. On the invite page, download the key file or copy the key.
-2. In the planner, open the menu (top left) and choose **Enter license key**.
-3. Paste the key, or choose the file you downloaded, and press **Check key**. A green **Full planner** tag appears when it's accepted.
+1. On the invite page, press **Open the planner with my key**. The planner opens already unlocked and a green **Full planner** tag appears. That's all.
+2. If that doesn't work (for example you want it in a different browser), download the key file or copy the key from the invite page, then in the planner open the menu (top left) and choose **Enter license key**.
+3. Paste the key, or choose the file you downloaded, and press **Check key**.
+
+The one-click button puts the key in the web address after a `#`. Browsers never send that part to any server, and the planner removes it from the address bar as soon as it has read it. Don't share that link, since it contains your key.
 
 Checking happens on your device and works offline; the key is never sent anywhere. It's remembered in that browser only, so enter it again on another device or browser. **Remove key** is in the same place. The key unlocks Your Numbers, Save to file, Open file and saving in your browser. Without a key you can still explore the sample and try Quick Adjust (nothing from Quick Adjust is saved). The key is separate from your plan file, so saving or opening a plan never includes it.
 

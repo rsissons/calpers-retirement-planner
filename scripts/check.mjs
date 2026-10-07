@@ -185,6 +185,15 @@ ok(reasons.every(r => !/ed25519|signature|webcrypto|payload|base64|cryptograph/i
 // The feedback link is plain https to the form page, nothing built from user input
 const { FEEDBACK_URL } = await v.ssrLoadModule('/src/links.ts');
 ok(/^https:\/\/[a-z0-9.-]+\/feedback\.html$/.test(FEEDBACK_URL), 'feedback link is a plain https address ending in /feedback.html');
+// A key can arrive in the part of the address after the # (never sent to any server): the invite page's one-click button
+const K = await v.ssrLoadModule('/src/keyLink.ts');
+ok(K.keyFromHash('#key=' + goodKey) === goodKey, 'key link: a key in the address is read');
+ok(K.keyFromHash('#key=' + encodeURIComponent(goodKey)) === goodKey, 'key link: an encoded key is read');
+ok(K.keyFromHash('') === null && K.keyFromHash('#') === null && K.keyFromHash('#guide') === null, 'key link: no key means null');
+ok(K.keyFromHash('#key=') === '', 'key link: an empty key is returned empty so it gets a message');
+ok(K.keyFromHash('#key=<script>alert(1)</script>') === '', 'key link: junk characters are dropped, not passed on');
+ok(K.keyFromHash('#key=' + 'A'.repeat(5000)) === '', 'key link: an oversized value is refused');
+ok(K.keyFromHash('#other=1&key=' + goodKey) === goodKey, 'key link: a key after another parameter is read');
 // What the key unlocks: own numbers, saving and opening files, autosave. Browsing and Quick Adjust on the sample stay open.
 const A = await v.ssrLoadModule('/src/access.ts');
 ok(A.canEditOwnNumbers({ licensed: false }) === false && A.canEditOwnNumbers({ licensed: true }) === true, 'access: own numbers need a key');

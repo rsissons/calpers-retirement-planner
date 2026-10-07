@@ -15,7 +15,8 @@ import { Guide } from './components/Guide';
 import { LicenseDialog } from './components/LicenseDialog';
 import { UnlockDialog } from './components/UnlockDialog';
 import { canEditOwnNumbers, canSaveAndOpenFiles, shouldAutosave } from './access';
-import { verifyLicense, loadStoredKey } from './license';
+import { verifyLicense, loadStoredKey, saveKey, messageFor } from './license';
+import { keyFromHash, clearKeyFromAddress } from './keyLink';
 import { FEEDBACK_URL } from './links';
 import type { LicensePayload } from './license';
 import { formulaById, systemOf } from './formulas';
@@ -47,6 +48,20 @@ function App() {
   const [license, setLicense] = useState<LicensePayload | null>(null);
   const [isLicenseOpen, setIsLicenseOpen] = useState(false);
   useEffect(() => {
+    // A key in the address (the invite page's one-click button) is checked, remembered and removed from the address bar
+    const fromLink = keyFromHash(window.location.hash);
+    if (fromLink !== null) {
+      clearKeyFromAddress();
+      verifyLicense(fromLink).then(r => {
+        if (!r.valid) { setNotice({ text: messageFor(r.reason), error: true }); return; }
+        const remembered = saveKey(fromLink);
+        setLicense(r.payload);
+        setNotice({ text: remembered
+          ? 'Full planner unlocked. Your key is remembered in this browser.'
+          : "Full planner unlocked for now, but your browser wouldn't let me remember the key, so you'll need to enter it again next time." });
+      });
+      return;
+    }
     const stored = loadStoredKey();
     if (!stored) return;
     verifyLicense(stored).then(r => { if (r.valid) setLicense(r.payload); });
