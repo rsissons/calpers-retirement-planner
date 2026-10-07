@@ -8,7 +8,7 @@ import { AreaChart, Area, XAxis, YAxis, CartesianGrid, ResponsiveContainer, Tool
 interface Props { config: Config; projection: ProjectionResult; }
 
 const $ = (v: number) => new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD', maximumFractionDigits: 0 }).format(v);
-const $k = (v: number) => new Intl.NumberFormat('en-US', { notation: 'compact', maximumFractionDigits: 0 }).format(v);
+const $k = (v: number) => new Intl.NumberFormat('en-US', { notation: 'compact', maximumSignificantDigits: 3 }).format(v);
 
 function countdown(dateStr: string) {
   const t = new Date(dateStr), n = new Date();
