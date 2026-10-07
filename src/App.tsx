@@ -13,6 +13,8 @@ import { Settings } from './components/Settings';
 import { QuickAdjust } from './components/QuickAdjust';
 import { Guide } from './components/Guide';
 import { LicenseDialog } from './components/LicenseDialog';
+import { UnlockDialog } from './components/UnlockDialog';
+import { canEditOwnNumbers, canSaveAndOpenFiles, shouldAutosave } from './access';
 import { verifyLicense, loadStoredKey } from './license';
 import { FEEDBACK_URL } from './links';
 import type { LicensePayload } from './license';
@@ -50,12 +52,24 @@ function App() {
     verifyLicense(stored).then(r => { if (r.valid) setLicense(r.payload); });
   }, []);
 
-  // Any edit makes the plan the person's own, and from then on it's saved in this browser
+  // Without a key the sample can be explored and tried in Quick Adjust, but the person's own numbers, plan files and
+  // autosave need the full planner. A refused action opens a box that explains why and offers the key screen.
+  const gate = { licensed: license !== null };
+  const [isUnlockOpen, setIsUnlockOpen] = useState(false);
+
+  // Any edit with a key makes the plan the person's own, and from then on it's saved in this browser
   const setConfig: Dispatch<SetStateAction<Config>> = (update) => {
+    if (!canEditOwnNumbers(gate)) { setIsUnlockOpen(true); return; }
     setIsSample(false);
     setConfigRaw(update);
   };
-  useEffect(() => { if (!isSample) savePlan(config); }, [config, isSample]);
+  // Quick Adjust: with a key it is the same as any edit. Without one it only tries things on what is on screen:
+  // nothing is saved and a reload brings the sample back.
+  const setConfigQuick: Dispatch<SetStateAction<Config>> = (update) => {
+    if (canEditOwnNumbers(gate)) setConfig(update);
+    else setConfigRaw(update);
+  };
+  useEffect(() => { if (shouldAutosave({ licensed: license !== null }, isSample)) savePlan(config); }, [config, isSample, license]);
 
   const effectiveConfig = useMemo(() => prepareConfig(config), [config]);
   const projection = useMemo(() => calculateProjection(effectiveConfig), [effectiveConfig]);
@@ -85,6 +99,7 @@ function App() {
         setIsSidebarOpen(false);
         setIsSettingsPanelOpen(false);
         setIsLicenseOpen(false);
+        setIsUnlockOpen(false);
       }
     };
     window.addEventListener('keydown', onKey);
@@ -99,11 +114,15 @@ function App() {
   }, [notice]);
 
   const onSaveFile = () => {
+    if (!canSaveAndOpenFiles(gate)) { setIsSidebarOpen(false); setIsUnlockOpen(true); return; }
     exportPlan(config);
     setNotice({ text: 'Plan saved to a file. Keep it somewhere safe; it holds your numbers.' });
     setIsSidebarOpen(false);
   };
-  const onOpenFile = () => fileInput.current?.click();
+  const onOpenFile = () => {
+    if (!canSaveAndOpenFiles(gate)) { setIsSidebarOpen(false); setIsUnlockOpen(true); return; }
+    fileInput.current?.click();
+  };
   const onFileChosen = async (e: ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     e.target.value = '';
@@ -296,7 +315,7 @@ function App() {
 
             {isSample && (
               <div className="rounded-lg border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-900 flex flex-col sm:flex-row sm:items-center gap-3 sm:justify-between">
-                <span>You're looking at a <b>made-up sample household</b> on CalPERS. Start with <b>Your Numbers</b>: pick CalPERS or CalSTRS first, then put in your own figures.</span>
+                <span>You're looking at a <b>made-up sample household</b> on CalPERS. Try <b>Quick Adjust</b> (the sliders icon, top right) to see how it responds. Putting in <b>your own numbers</b> needs the full planner: open the menu and choose <b>Enter license key</b>.</span>
                 <div className="flex gap-2 shrink-0">
                   <button onClick={goToPension} className="bg-amber-600 hover:bg-amber-700 text-white font-semibold px-3 py-1.5 rounded-lg">Enter my numbers</button>
                   <button onClick={onOpenFile} className="border border-amber-300 hover:bg-amber-100 font-semibold px-3 py-1.5 rounded-lg">Open a saved plan</button>
@@ -309,7 +328,7 @@ function App() {
             {activeTab === 'funding' && <FundingSource projection={projection} />}
             {activeTab === 'balances' && <AccountBalances projection={projection} />}
             {activeTab === 'data' && <DataTable config={effectiveConfig} projection={projection} />}
-            {activeTab === 'settings' && <Settings config={config} setConfig={setConfig} />}
+            {activeTab === 'settings' && <Settings config={config} setConfig={setConfig} locked={!canEditOwnNumbers(gate)} onEnterKey={() => setIsLicenseOpen(true)} />}
             {activeTab === 'guide' && <Guide />}
 
             <footer className="pt-6 pb-2 text-center text-[11px] text-slate-400">
@@ -342,7 +361,7 @@ function App() {
             </div>
 
             <div className="flex-1 overflow-y-auto p-6 custom-scrollbar">
-              <QuickAdjust config={config} setConfig={setConfig} />
+              <QuickAdjust config={config} setConfig={setConfigQuick} />
             </div>
 
             <div className="p-6 border-t border-slate-100 bg-slate-50">
@@ -357,6 +376,8 @@ function App() {
         </div>
       </div>
 
+      <UnlockDialog open={isUnlockOpen} onClose={() => setIsUnlockOpen(false)}
+        onEnterKey={() => { setIsUnlockOpen(false); setIsLicenseOpen(true); }} />
       <LicenseDialog open={isLicenseOpen} onClose={() => setIsLicenseOpen(false)} license={license}
         onAccepted={setLicense} onRemoved={() => setLicense(null)} />
     </div>

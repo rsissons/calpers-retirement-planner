@@ -10,6 +10,8 @@ import { Card, DateField, Hint, NumberField, SliderField, TextField, Toggle } fr
 interface Props {
   config: Config;
   setConfig: React.Dispatch<React.SetStateAction<Config>>;
+  locked: boolean;          // no license key: the page can be read but not changed
+  onEnterKey: () => void;
 }
 
 const $ = (v: number) => new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD', maximumFractionDigits: 0 }).format(v);
@@ -20,7 +22,7 @@ const SYSTEMS: { id: PensionSystem; who: string; first: string }[] = [
   { id: 'CalSTRS', who: 'Teachers and other certificated school staff (K-12 and community college)', first: 'calstrs-2-at-60' },
 ];
 
-export const Settings: FC<Props> = ({ config, setConfig }) => {
+export const Settings: FC<Props> = ({ config, setConfig, locked, onEnterKey }) => {
   const onChange = useConfigChange(setConfig);
   const pension = calculatePension(config);
   const formula = pension.formula;
@@ -61,6 +63,13 @@ export const Settings: FC<Props> = ({ config, setConfig }) => {
           The User Guide lists where to find each number.
         </p>
       </div>
+
+      {locked && (
+        <div className="rounded-lg border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-900 flex flex-col sm:flex-row sm:items-center gap-3 sm:justify-between">
+          <span><b>Locked until you enter a license key.</b> You can read everything here, but changing the numbers needs the full planner.</span>
+          <button onClick={onEnterKey} className="bg-amber-600 hover:bg-amber-700 text-white font-semibold px-3 py-1.5 rounded-lg shrink-0">Enter license key</button>
+        </div>
+      )}
 
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
 

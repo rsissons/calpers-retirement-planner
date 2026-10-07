@@ -14,6 +14,8 @@ All money is **monthly** unless the label says otherwise. Every change applies i
 
 Your paystub shows which one takes your retirement contribution. In the planner, pick it first: it's the top card on **Your Numbers**. The sample plan starts on CalPERS.
 
+**Your own numbers need the full planner (a license key; see "If you got an invite and a license key" in section 4).** Without a key you can explore the made-up sample household and try Quick Adjust on it, but you can't edit Your Numbers, save, or open files.
+
 ### If you're in CalPERS
 
 | Item | Where to find it |
@@ -161,7 +163,7 @@ A simple way to estimate spending: add up 12 months of bank and credit card stat
 2. In the planner, open the menu (top left) and choose **Enter license key**.
 3. Paste the key, or choose the file you downloaded, and press **Check key**. A green **Full planner** tag appears when it's accepted.
 
-Checking happens on your device and works offline; the key is never sent anywhere. It's remembered in that browser only, so enter it again on another device or browser. **Remove key** is in the same place. Right now the key doesn't change how the planner works. It's separate from your plan file, so saving or opening a plan never includes it.
+Checking happens on your device and works offline; the key is never sent anywhere. It's remembered in that browser only, so enter it again on another device or browser. **Remove key** is in the same place. The key unlocks Your Numbers, Save to file, Open file and saving in your browser. Without a key you can still explore the sample and try Quick Adjust (nothing from Quick Adjust is saved). The key is separate from your plan file, so saving or opening a plan never includes it.
 
 ---
 

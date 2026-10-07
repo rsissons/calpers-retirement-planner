@@ -185,6 +185,13 @@ ok(reasons.every(r => !/ed25519|signature|webcrypto|payload|base64|cryptograph/i
 // The feedback link is plain https to the form page, nothing built from user input
 const { FEEDBACK_URL } = await v.ssrLoadModule('/src/links.ts');
 ok(/^https:\/\/[a-z0-9.-]+\/feedback\.html$/.test(FEEDBACK_URL), 'feedback link is a plain https address ending in /feedback.html');
+// What the key unlocks: own numbers, saving and opening files, autosave. Browsing and Quick Adjust on the sample stay open.
+const A = await v.ssrLoadModule('/src/access.ts');
+ok(A.canEditOwnNumbers({ licensed: false }) === false && A.canEditOwnNumbers({ licensed: true }) === true, 'access: own numbers need a key');
+ok(A.canSaveAndOpenFiles({ licensed: false }) === false && A.canSaveAndOpenFiles({ licensed: true }) === true, 'access: save and open file need a key');
+ok(A.shouldAutosave({ licensed: false }, false) === false, 'access: no autosave without a key, even for an edited plan');
+ok(A.shouldAutosave({ licensed: true }, true) === false, 'access: the untouched sample is never autosaved');
+ok(A.shouldAutosave({ licensed: true }, false) === true, 'access: a keyed, edited plan autosaves');
 // Remembering the key in the browser
 const store = {};
 globalThis.localStorage = { getItem: k => (k in store ? store[k] : null), setItem: (k, x) => { store[k] = String(x); }, removeItem: k => { delete store[k]; } };

@@ -31,10 +31,10 @@ export const Guide: FC = () => (
     <Section title="How to use this planner">
       <ol className="list-decimal pl-5 space-y-1">
         <li>Gather the numbers in the checklist below. Most come from myCalPERS or myCalSTRS and your Social Security statement.</li>
-        <li>Open <b>Your Numbers</b> and replace the sample figures with yours. Changes apply instantly.</li>
+        <li>Look around the sample household first. To put in <b>your own numbers</b> you need the full planner (a license key, see below). Then open <b>Your Numbers</b> and replace the sample figures with yours. Changes apply instantly.</li>
         <li>Read the <b>Overview</b>: how long the money lasts, your first-month budget, and when savings run out.</li>
-        <li>Try different retirement dates and spending levels in <b>Quick Adjust</b> (the sliders button, top right).</li>
-        <li>Use <b>Save to file</b> in the menu to keep a copy. Your numbers also stay in this browser until you clear them.</li>
+        <li>Try different retirement dates and spending levels in <b>Quick Adjust</b> (the sliders button, top right). It works on the sample without a key, but nothing is saved.</li>
+        <li>Use <b>Save to file</b> in the menu to keep a copy (full planner). Your numbers also stay in this browser until you clear them.</li>
         <li>Something confusing or not working? Use <b>Send feedback</b> at the bottom of the menu. It opens a short form in a new tab. Please don't type your own numbers there.</li>
       </ol>
       <p className="text-xs text-gray-500">Nothing you type leaves your device. There's no account and no server; the math runs in this page.</p>
@@ -50,7 +50,7 @@ export const Guide: FC = () => (
         <li>Here, open the menu (top left) and choose <b>Enter license key</b>.</li>
         <li>Paste the key, or choose the file you downloaded, and press <b>Check key</b>. A green <b>Full planner</b> tag appears when it's accepted.</li>
       </ol>
-      <p className="text-xs text-gray-500">Checking happens on your device and works offline. The key is remembered in this browser only, so enter it again on another device or browser. <b>Remove key</b> is in the same place. Right now the key doesn't change how the planner works.</p>
+      <p className="text-xs text-gray-500">Checking happens on your device and works offline. The key is remembered in this browser only, so enter it again on another device or browser. <b>Remove key</b> is in the same place. The key unlocks <b>Your Numbers</b>, <b>Save to file</b>, <b>Open file</b> and saving in your browser. Without a key you can still explore the sample and try Quick Adjust.</p>
     </Section>
 
     <Section title="What to gather">

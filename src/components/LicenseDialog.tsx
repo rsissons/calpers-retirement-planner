@@ -85,7 +85,7 @@ const LicenseDialogBody: FC<Omit<Props, 'open'>> = ({ onClose, license, onAccept
         {license ? (
           <>
             <p className="text-sm text-slate-600">
-              Your key is accepted on this device{issuedOn(license.iat) ? <>. It was issued on <b>{issuedOn(license.iat)}</b></> : null}. Nothing else changes: the planner works the same as before.
+              Your key is accepted on this device{issuedOn(license.iat) ? <>. It was issued on <b>{issuedOn(license.iat)}</b></> : null}. Your own numbers, saving and opening plan files are unlocked.
             </p>
             {message && <p role="status" className={message.bad ? 'text-sm font-medium text-red-700' : 'text-sm font-medium text-emerald-700'}>{message.text}</p>}
             <div className="flex flex-wrap gap-2 pt-1">

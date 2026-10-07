@@ -39,7 +39,7 @@ It isn't built for other states' taxes or other pension systems. A spouse's pens
 
 1. Download `CalPERS-Retirement-Planner-1.4.1.html` from the [latest release](https://github.com/rsissons/calpers-retirement-planner/releases/latest) and save it anywhere, like your Documents folder.
 2. Double-click it. It opens in your browser.
-3. It opens on the **Guide** with a made-up sample household loaded. Click **Enter my numbers** and replace the sample figures with yours.
+3. It opens on the **Guide** with a made-up sample household loaded. Explore it freely. To use your own numbers, enter your license key (menu, **Enter license key**), then replace the sample figures with yours.
 4. Your numbers save automatically in that browser. Use **Save to file** in the menu (☰) to keep a backup you can move to another computer or browser.
 
 **On an iPad or iPhone:** use the online link above. Tapping a saved HTML file in the Files app shows a preview, not a working page.
@@ -50,7 +50,7 @@ It isn't built for other states' taxes or other pension systems. A spouse's pens
 - Your numbers are saved only in your browser's local storage, on your device. Clearing your browser data erases them. So does "Start over with the sample" in the menu.
 - "Save to file" downloads a plain JSON file with your numbers. Treat it like any financial document.
 - "Send feedback" in the menu is an ordinary link to a short form page. It opens in a new tab only if you click it, and the planner sends nothing on its own. Please don't type your own numbers into the form.
-- If you enter an invite license key (menu, "Enter license key"), it is checked on your device against a public key built into the page, and remembered in the same local storage. Nothing is sent anywhere, and the key is never part of a saved plan file. The key doesn't change how the planner works yet.
+- If you enter an invite license key (menu, "Enter license key"), it is checked on your device against a public key built into the page, and remembered in the same local storage. Nothing is sent anywhere, and the key is never part of a saved plan file. The key unlocks your own numbers, plan files and saving; without one you can explore the sample household and try Quick Adjust. This is an honor-level lock, since the source is public.
 - Anyone who uses the same browser profile on the same device can open the planner and see your numbers.
 
 ## What it models, and what it doesn't
