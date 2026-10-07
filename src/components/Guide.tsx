@@ -35,6 +35,7 @@ export const Guide: FC = () => (
         <li>Read the <b>Overview</b>: how long the money lasts, your first-month budget, and when savings run out.</li>
         <li>Try different retirement dates and spending levels in <b>Quick Adjust</b> (the sliders button, top right).</li>
         <li>Use <b>Save to file</b> in the menu to keep a copy. Your numbers also stay in this browser until you clear them.</li>
+        <li>Something confusing or not working? Use <b>Send feedback</b> at the bottom of the menu. It opens a short form in a new tab. Please don't type your own numbers there.</li>
       </ol>
       <p className="text-xs text-gray-500">Nothing you type leaves your device. There's no account and no server; the math runs in this page.</p>
       <p className="text-xs text-gray-500">

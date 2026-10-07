@@ -182,6 +182,9 @@ ok(L.PUBLIC_KEY.length === 43 && (await subtle.importKey('raw', Buffer.from(L.PU
 const reasons = ['empty', 'malformed', 'bad_signature', 'wrong_version', 'unsupported'];
 ok(reasons.every(r => typeof L.messageFor(r) === 'string' && L.messageFor(r).length > 20), 'license: every failure has a plain message');
 ok(reasons.every(r => !/ed25519|signature|webcrypto|payload|base64|cryptograph/i.test(L.messageFor(r))), 'license: no jargon in the messages');
+// The feedback link is plain https to the form page, nothing built from user input
+const { FEEDBACK_URL } = await v.ssrLoadModule('/src/links.ts');
+ok(/^https:\/\/[a-z0-9.-]+\/feedback\.html$/.test(FEEDBACK_URL), 'feedback link is a plain https address ending in /feedback.html');
 // Remembering the key in the browser
 const store = {};
 globalThis.localStorage = { getItem: k => (k in store ? store[k] : null), setItem: (k, x) => { store[k] = String(x); }, removeItem: k => { delete store[k]; } };

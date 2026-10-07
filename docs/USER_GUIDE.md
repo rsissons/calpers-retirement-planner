@@ -169,6 +169,8 @@ Checking happens on your device and works offline; the key is never sent anywher
 
 **The planner says my license key didn't check out.** Copy the whole key again from the invite page, or download the key file and choose it with **Choose key file**. A key that was cut off or edited won't verify.
 
+**I want to tell you something about the planner.** Use **Send feedback** at the bottom of the menu. It opens a short form in a new tab, with a few plain questions and an optional email if you want a reply. Please describe what happened rather than typing your own numbers, names or account details. It's an ordinary link: the planner itself sends nothing.
+
 **It says my browser can't check license keys.** Use a recent Chrome, Edge, Firefox or Safari (version 17 or newer). Older browsers can't do the check.
 
 **My numbers disappeared.** The browser's storage was cleared, you're in a private window, or you opened the planner in a different browser or from a different copy of the file. Use **Open file** with your saved plan.

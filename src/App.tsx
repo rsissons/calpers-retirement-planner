@@ -14,9 +14,10 @@ import { QuickAdjust } from './components/QuickAdjust';
 import { Guide } from './components/Guide';
 import { LicenseDialog } from './components/LicenseDialog';
 import { verifyLicense, loadStoredKey } from './license';
+import { FEEDBACK_URL } from './links';
 import type { LicensePayload } from './license';
 import { formulaById, systemOf } from './formulas';
-import { LayoutDashboard, PieChart, Layers, LineChart as LineChartIcon, Settings as SettingsIcon, TableProperties, Menu, X, ChevronRight, Pencil, Sliders, BookOpen, Download, Upload, RotateCcw, KeyRound, BadgeCheck } from 'lucide-react';
+import { LayoutDashboard, PieChart, Layers, LineChart as LineChartIcon, Settings as SettingsIcon, TableProperties, Menu, X, ChevronRight, Pencil, Sliders, BookOpen, Download, Upload, RotateCcw, KeyRound, BadgeCheck, MessageSquare } from 'lucide-react';
 import { clsx, type ClassValue } from 'clsx';
 import { twMerge } from 'tailwind-merge';
 
@@ -217,6 +218,10 @@ function App() {
             className="w-full flex items-center justify-center gap-1.5 bg-slate-800 hover:bg-slate-700 text-slate-200 text-xs font-bold py-2.5 rounded-xl transition-colors">
             {license ? <><BadgeCheck size={14} className="text-emerald-400" /> Full planner: key accepted</> : <><KeyRound size={14} /> Enter license key</>}
           </button>
+          <a href={FEEDBACK_URL} target="_blank" rel="noreferrer"
+            className="w-full flex items-center justify-center gap-1.5 text-slate-400 hover:text-slate-200 text-xs font-semibold py-1.5 transition-colors">
+            <MessageSquare size={13} /> Send feedback
+          </a>
         </div>
       </aside>
 
